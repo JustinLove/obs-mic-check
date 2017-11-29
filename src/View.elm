@@ -2,15 +2,15 @@ module View exposing (view, ViewMsg(..))
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events
+import Html.Events exposing (onClick)
 
 type ViewMsg
-  = None
+  = Test
 
 -- VIEW
 
 -- view : Model -> Html ViewMsg
 view model =
   div []
-    [ text "stuff"
+    [ button [ onClick Test ] [ text "Test" ]
     ]

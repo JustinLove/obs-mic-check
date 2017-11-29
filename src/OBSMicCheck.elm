@@ -1,15 +1,19 @@
 module OBSMicCheck exposing (..)
 
 import View exposing (view, ViewMsg(..))
+import OBSWebSocket.Encode exposing (..)
 
 import Html
 import WebSocket
 import Json.Decode
+import Json.Encode
+
+obsAddress = "ws://localhost:4444"
 
 main =
   Html.program
     { init = init
-    , view = view
+    , view = (\model -> Html.map View (view model))
     , update = update
     , subscriptions = subscriptions
     }
@@ -39,13 +43,14 @@ update msg model =
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
-    View None -> (model, Cmd.none)
+    View Test ->
+      (model, WebSocket.send obsAddress (Json.Encode.encode 0 getVersion))
 
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  WebSocket.listen "ws://localhost:4444" receiveMessage
+  WebSocket.listen obsAddress receiveMessage
 
 receiveMessage : String -> Msg
 receiveMessage =
