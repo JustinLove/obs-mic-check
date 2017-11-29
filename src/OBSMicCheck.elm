@@ -1,7 +1,8 @@
 module OBSMicCheck exposing (..)
 
 import View exposing (view, ViewMsg(..))
-import OBSWebSocket.Encode exposing (..)
+import OBSWebSocket.Encode as Request
+import OBSWebSocket.Decode as Response
 
 import Html
 import WebSocket
@@ -31,7 +32,7 @@ init =
 -- UPDATE
 
 type Msg
-  = OBS (Result String Json.Decode.Value)
+  = OBS (Result String Response.GetVersion)
   | View ViewMsg
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -44,7 +45,7 @@ update msg model =
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
     View Test ->
-      (model, WebSocket.send obsAddress (Json.Encode.encode 0 getVersion))
+      (model, WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion))
 
 -- SUBSCRIPTIONS
 
@@ -54,4 +55,4 @@ subscriptions model =
 
 receiveMessage : String -> Msg
 receiveMessage =
-  OBS << (Json.Decode.decodeString Json.Decode.value)
+  OBS << (Json.Decode.decodeString Response.getVersion)
