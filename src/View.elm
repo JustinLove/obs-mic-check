@@ -5,12 +5,13 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
 
 type ViewMsg
-  = Test
+  = Connect
 
 -- VIEW
 
 -- view : Model -> Html ViewMsg
 view model =
   div []
-    [ text <| toString model.connected
+    [ button [ onClick Connect ] [ text "Connect" ]
+    , text <| toString model.connected
     ]

@@ -21,6 +21,6 @@ eventWrapper =
 message : Decoder Message
 message =
   oneOf
-    [ Response.getVersion |> responseWrapper
+    [ Response.response |> responseWrapper
     , Event.streamStatus |> eventWrapper
     ]
