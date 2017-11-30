@@ -2,7 +2,7 @@ module OBSMicCheck exposing (..)
 
 import View exposing (view, ViewMsg(..))
 import OBSWebSocket.Request as Request
-import OBSWebSocket.Response as Response
+import OBSWebSocket.Response as Response exposing (Response(..), ResponseData)
 
 import Html
 import WebSocket
@@ -38,7 +38,7 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    OBS (Ok (Response.GetVersion version)) ->
+    OBS (Ok (Response id (Response.GetVersion version))) ->
       let _ = Debug.log "got" version in
       (model, Cmd.none)
     OBS (Err message) ->
