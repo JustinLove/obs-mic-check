@@ -23,13 +23,17 @@ main =
 
 -- MODEL
 
+type ConnectionStatus
+ = NotConnected
+ | Connected String
+
 type alias Model =
-  {
+  { connected : ConnectionStatus
   }
 
 init : (Model, Cmd Msg)
 init =
-  ({}, Cmd.none)
+  (Model NotConnected, Cmd.none)
 
 -- UPDATE
 
@@ -42,15 +46,18 @@ update msg model =
   case msg of
     OBS (Ok (Response id (Response.GetVersion version))) ->
       let _ = Debug.log "version" version in
-      (model, Cmd.none)
+      ({model | connected = Connected version.obsWebsocketVersion}, Cmd.none)
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
-      (model, Cmd.none)
+      if model.connected == NotConnected then
+        (model, WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion))
+      else
+        (model, Cmd.none)
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
     View Test ->
-      (model, WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion))
+      (model, Cmd.none)
 
 -- SUBSCRIPTIONS
 

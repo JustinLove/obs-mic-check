@@ -12,5 +12,5 @@ type ViewMsg
 -- view : Model -> Html ViewMsg
 view model =
   div []
-    [ button [ onClick Test ] [ text "Test" ]
+    [ text <| toString model.connected
     ]
