@@ -1,6 +1,7 @@
 module OBSMicCheck exposing (..)
 
 import View exposing (view, ViewMsg(..))
+import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Event as Event exposing (EventData)
@@ -10,8 +11,6 @@ import Html
 import WebSocket
 import Json.Decode
 import Json.Encode
-import Crypto.Hash exposing (sha256)
-import Base64
 
 obsAddress = "ws://localhost:4444"
 
@@ -37,6 +36,9 @@ type alias Model =
 
 init : (Model, Cmd Msg)
 init =
+--let _ = Debug.log "auth" (OBSWebSocket.authenticate "supersecretpassword" "PZVbYpvAnZut2SS6JNJytDm9" "ztTBnnuqrqaKDzRM3xcVdbYm") in
+-- hash Ln68W1UNXYyY7xDwp+h5foYLI6bzI1qZjKokTa5ZdwE=
+-- auth zZgWipvwSGrw748kHN4gNpBC1IaeiiWX3Hjkrm849Sc=
   (Model NotConnected "password", Cmd.none)
 
 -- UPDATE
@@ -53,15 +55,13 @@ update msg model =
       , WebSocket.send obsAddress (Json.Encode.encode 0 Request.getAuthRequired)
       )
     OBS (Ok (Response id (Response.AuthRequired challenge))) ->
-      let
-        _ = Debug.log "challenge" challenge
-        stuff = model.password ++ challenge.salt
-        base64Secret = sha256 stuff |> Base64.encode
-        more = base64Secret ++ challenge.challenge
-        authResponse = sha256 more |> Base64.encode
-      in
-      (model, Cmd.none)
+      ( model
+      , WebSocket.send obsAddress (Json.Encode.encode 0 (Request.authenticate (OBSWebSocket.authenticate model.password challenge.salt challenge.challenge)))
+      )
     OBS (Ok (Response id (Response.AuthNotRequired))) ->
+      ( { model | connected = authenticatedStatus model.connected}
+      , Cmd.none)
+    OBS (Ok (Response id (Response.Authenticate))) ->
       ( { model | connected = authenticatedStatus model.connected}
       , Cmd.none)
     OBS (Ok (Event (Event.StreamStatus status))) ->

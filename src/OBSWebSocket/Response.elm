@@ -6,12 +6,14 @@ type ResponseData
   = GetVersion Version
   | AuthRequired Challenge
   | AuthNotRequired
+  | Authenticate
 
 response : Decoder ResponseData
 response =
   oneOf
     [ getVersion
     , getAuthRequired
+    , authenticate
     ]
 
 type alias Version =
@@ -46,3 +48,14 @@ getChallenge =
   map2 Challenge
     (field "challenge" string)
     (field "salt" string)
+
+authenticate : Decoder ResponseData
+authenticate =
+  map2 (,)
+    (field "message-id" string)
+    (field "status" string)
+  |> andThen (\(id, status) -> case (id, status) of
+      ("Authenticate", "ok") -> succeed Authenticate
+      ("Authenticate", "error") -> fail "Authentication failed"
+      _ -> fail "Decoder does not apply"
+    )
