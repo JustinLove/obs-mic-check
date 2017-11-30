@@ -32,14 +32,14 @@ init =
 -- UPDATE
 
 type Msg
-  = OBS (Result String Response.GetVersion)
+  = OBS (Result String Response.Response)
   | View ViewMsg
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    OBS (Ok value) ->
-      let _ = Debug.log "got" value in
+    OBS (Ok (Response.GetVersion version)) ->
+      let _ = Debug.log "got" version in
       (model, Cmd.none)
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
