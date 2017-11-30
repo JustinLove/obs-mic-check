@@ -26,6 +26,7 @@ main =
 type ConnectionStatus
  = NotConnected
  | Connected String
+ | Authenticated String
 
 type alias Model =
   { connected : ConnectionStatus
@@ -45,7 +46,6 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     OBS (Ok (Response id (Response.GetVersion version))) ->
-      let _ = Debug.log "version" version in
       ( { model | connected = Connected version.obsWebsocketVersion}
       , WebSocket.send obsAddress (Json.Encode.encode 0 Request.getAuthRequired)
       )
@@ -53,19 +53,33 @@ update msg model =
       let _ = Debug.log "challenge" challenge in
       (model, Cmd.none)
     OBS (Ok (Response id (Response.AuthNotRequired))) ->
-      let _ = Debug.log "no auth" "-" in
-      (model, Cmd.none)
+      ( { model | connected = authenticatedStatus model.connected}
+      , Cmd.none)
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
-        (model, WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion))
+        (model, attemptToConnect)
       else
         (model, Cmd.none)
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
     View Connect ->
-      (model, WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion))
+      (model, attemptToConnect)
+
+attemptToConnect : Cmd Msg
+attemptToConnect =
+  WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion)
+
+authenticatedStatus : ConnectionStatus -> ConnectionStatus
+authenticatedStatus connected =
+  case connected of
+    NotConnected ->
+      Authenticated "-"
+    Connected version->
+      Authenticated version 
+    Authenticated version->
+      Authenticated version 
 
 -- SUBSCRIPTIONS
 
