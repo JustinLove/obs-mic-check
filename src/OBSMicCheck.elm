@@ -10,6 +10,8 @@ import Html
 import WebSocket
 import Json.Decode
 import Json.Encode
+import Crypto.Hash exposing (sha256)
+import Base64
 
 obsAddress = "ws://localhost:4444"
 
@@ -51,7 +53,13 @@ update msg model =
       , WebSocket.send obsAddress (Json.Encode.encode 0 Request.getAuthRequired)
       )
     OBS (Ok (Response id (Response.AuthRequired challenge))) ->
-      let _ = Debug.log "challenge" challenge in
+      let
+        _ = Debug.log "challenge" challenge
+        stuff = model.password ++ challenge.salt
+        base64Secret = sha256 stuff |> Base64.encode
+        more = base64Secret ++ challenge.challenge
+        authResponse = sha256 more |> Base64.encode
+      in
       (model, Cmd.none)
     OBS (Ok (Response id (Response.AuthNotRequired))) ->
       ( { model | connected = authenticatedStatus model.connected}
