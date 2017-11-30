@@ -30,11 +30,12 @@ type ConnectionStatus
 
 type alias Model =
   { connected : ConnectionStatus
+  , password : String
   }
 
 init : (Model, Cmd Msg)
 init =
-  (Model NotConnected, Cmd.none)
+  (Model NotConnected "password", Cmd.none)
 
 -- UPDATE
 
@@ -64,6 +65,8 @@ update msg model =
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
+    View (SetPassword word) ->
+      ({model | password = word}, attemptToConnect)
     View Connect ->
       (model, attemptToConnect)
 
