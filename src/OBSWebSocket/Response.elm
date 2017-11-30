@@ -2,15 +2,8 @@ module OBSWebSocket.Response exposing (..)
 
 import Json.Decode exposing (..)
 
-type Response = Response String ResponseData
-
 type ResponseData
   = GetVersion GetVersionStruct
-
-wrapper : Decoder ResponseData -> Decoder Response
-wrapper =
-  map2 Response
-    (field "message-id" string)
 
 type alias GetVersionStruct =
   { obsWebsocketVersion : String
@@ -18,10 +11,9 @@ type alias GetVersionStruct =
   -- availableRequests
   }
 
-getVersion : Decoder Response
+getVersion : Decoder ResponseData
 getVersion =
   map2 GetVersionStruct
     (field "obs-websocket-version" string)
     (field "obs-studio-version" string)
   |> map GetVersion 
-  |> wrapper
