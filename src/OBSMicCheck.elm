@@ -1,8 +1,8 @@
 module OBSMicCheck exposing (..)
 
 import View exposing (view, ViewMsg(..))
-import OBSWebSocket.Encode as Request
-import OBSWebSocket.Decode as Response
+import OBSWebSocket.Request as Request
+import OBSWebSocket.Response as Response
 
 import Html
 import WebSocket

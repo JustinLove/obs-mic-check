@@ -1,4 +1,4 @@
-module OBSWebSocket.Encode exposing (..)
+module OBSWebSocket.Request exposing (..)
 
 import Json.Encode exposing (..)
 
