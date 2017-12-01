@@ -1,6 +1,6 @@
 module View exposing (view, ViewMsg(..))
 
-import OBSWebSocket.Response as Response exposing (Scene, Source)
+import OBSWebSocket.Response as Response exposing (Scene, Source, Render(..), Audio(..))
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -39,30 +39,28 @@ displaySource : Source -> Html ViewMsg
 displaySource source =
   ul
     [ classList 
-      [ ("hidden", not source.render)
-      , ("visible", source.render)
+      [ ("hidden", source.render == Hidden)
+      , ("visible", source.render == Visible)
       ]
     ]
     [ renderStatus source.render
     , text " "
-    , muteStatus source.muted
+    , audioStatus source.audio
     , text " "
     , text source.name
     , text " "
     , em [] [ text source.type_ ]
     ]
 
-renderStatus : Bool -> Html ViewMsg
+renderStatus : Render -> Html ViewMsg
 renderStatus render =
-  if render then
-    span [ class "video" ] [ text "O" ]
-  else
-    span [ class "video" ] [ text "-" ]
+  case render of
+    Visible -> span [ class "video" ] [ text "O" ]
+    Hidden -> span [ class "video" ] [ text "-" ]
 
-muteStatus : Bool -> Html ViewMsg
-muteStatus muted =
-  if muted then
-    span [ class "audio muted" ] [ text "<X " ]
-  else
-    span [ class "audio" ] [ text "<))" ]
+audioStatus : Audio -> Html ViewMsg
+audioStatus audio =
+  case audio of
+    Muted -> span [ class "audio muted" ] [ text "<X " ]
+    Live -> span [ class "audio live" ] [ text "<))" ]
 

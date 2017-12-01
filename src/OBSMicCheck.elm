@@ -3,7 +3,7 @@ module OBSMicCheck exposing (..)
 import View exposing (view, ViewMsg(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
-import OBSWebSocket.Response as Response exposing (ResponseData, Scene, Source)
+import OBSWebSocket.Response as Response exposing (ResponseData, Scene, Source, Render(..), Audio(..))
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 
@@ -66,8 +66,8 @@ update msg model =
         |> List.map (.name >> Request.getMute >> obsSend)
         |> Cmd.batch
       )
-    OBS (Ok (Response id (Response.Muted sceneName muted))) ->
-      ( {model | currentScene = setMuted model.currentScene sceneName muted}
+    OBS (Ok (Response id (Response.GetMuted sceneName audio))) ->
+      ( {model | currentScene = setAudio model.currentScene sceneName audio}
       , Cmd.none
       )
     OBS (Ok (Event (Event.StreamStatus status))) ->
@@ -104,12 +104,12 @@ authenticatedStatus connected =
     Authenticated version->
       Authenticated version 
 
-setMuted : Scene -> String -> Bool -> Scene
-setMuted scene sourceName muted =
+setAudio : Scene -> String -> Audio -> Scene
+setAudio scene sourceName audio =
   { scene | sources =
     List.map (\source ->
         if source.name == sourceName then
-          { source | muted = muted }
+          { source | audio = audio }
         else
         source )
       scene.sources

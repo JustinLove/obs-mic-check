@@ -8,7 +8,7 @@ type ResponseData
   | AuthNotRequired
   | Authenticate
   | CurrentScene Scene
-  | Muted String Bool
+  | GetMuted String Audio
 
 response : Decoder ResponseData
 response =
@@ -17,7 +17,7 @@ response =
     , getAuthRequired
     , authenticate
     , currentScene
-    , muted
+    , getMuted
     ]
 
 type alias Version =
@@ -69,12 +69,20 @@ type alias Scene =
   , sources : List Source
   }
 
+type Render
+  = Visible
+  | Hidden
+
+type Audio
+  = Live
+  | Muted
+
 type alias Source =
   { name : String
-  , render : Bool
+  , render : Render
   , type_ : String
   , volume : Float
-  , muted : Bool
+  , audio : Audio
   }
 
 currentScene : Decoder ResponseData
@@ -91,13 +99,21 @@ source : Decoder Source
 source =
   map5 Source
     (field "name" string)
-    (field "render" bool)
+    (field "render" render)
     (field "type" string)
     (field "volume" float)
-    (succeed False)
+    (succeed Live)
 
-muted : Decoder ResponseData
-muted =
-  map2 Muted
+render : Decoder Render
+render =
+  map (\b -> if b then Visible else Hidden) bool
+
+getMuted : Decoder ResponseData
+getMuted =
+  map2 GetMuted
     (field "name" string)
-    (field "muted" bool)
+    (field "muted" muted)
+
+muted : Decoder Audio
+muted =
+  map (\b -> if b then Muted else Live) bool
