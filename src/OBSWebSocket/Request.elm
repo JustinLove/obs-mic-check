@@ -6,6 +6,7 @@ type Request
   = GetVersion
   | GetAuthRequired
   | Authenticate String
+  | GetCurrentScene
 
 basicRequest : Request -> Value
 basicRequest req =
@@ -27,3 +28,6 @@ authenticate auth =
     , ("message-id", string "Authenticate")
     , ("auth", string auth)
     ]
+
+getCurrentScene : Value
+getCurrentScene = basicRequest GetCurrentScene

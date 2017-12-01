@@ -52,18 +52,16 @@ update msg model =
   case msg of
     OBS (Ok (Response id (Response.GetVersion version))) ->
       ( { model | connected = Connected version.obsWebsocketVersion}
-      , WebSocket.send obsAddress (Json.Encode.encode 0 Request.getAuthRequired)
+      , obsSend <| Request.getAuthRequired
       )
     OBS (Ok (Response id (Response.AuthRequired challenge))) ->
       ( model
-      , WebSocket.send obsAddress (Json.Encode.encode 0 (Request.authenticate (OBSWebSocket.authenticate model.password challenge.salt challenge.challenge)))
+      , obsSend <| Request.authenticate (OBSWebSocket.authenticate model.password challenge.salt challenge.challenge)
       )
     OBS (Ok (Response id (Response.AuthNotRequired))) ->
-      ( { model | connected = authenticatedStatus model.connected}
-      , Cmd.none)
+      authenticated model
     OBS (Ok (Response id (Response.Authenticate))) ->
-      ( { model | connected = authenticatedStatus model.connected}
-      , Cmd.none)
+      authenticated model
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
@@ -80,7 +78,13 @@ update msg model =
 
 attemptToConnect : Cmd Msg
 attemptToConnect =
-  WebSocket.send obsAddress (Json.Encode.encode 0 Request.getVersion)
+  obsSend <| Request.getVersion
+
+authenticated : Model -> (Model, Cmd Msg)
+authenticated model =
+  ( { model | connected = authenticatedStatus model.connected}
+  , obsSend <| Request.getCurrentScene
+  )
 
 authenticatedStatus : ConnectionStatus -> ConnectionStatus
 authenticatedStatus connected =
@@ -91,6 +95,10 @@ authenticatedStatus connected =
       Authenticated version 
     Authenticated version->
       Authenticated version 
+
+obsSend : Json.Encode.Value -> Cmd Msg
+obsSend message =
+  WebSocket.send obsAddress (Json.Encode.encode 0 message)
 
 -- SUBSCRIPTIONS
 
