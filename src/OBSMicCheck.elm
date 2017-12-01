@@ -4,7 +4,7 @@ import View exposing (view, ViewMsg(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
-import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 import AlarmRule exposing (AlarmRule)
@@ -36,6 +36,7 @@ type alias Model =
   { connected : ConnectionStatus
   , password : String
   , currentScene : Scene
+  , specialSources : SpecialSources
   , rules : List AlarmRule
   , alarms : List AlarmRule
   }
@@ -50,6 +51,7 @@ makeModel =
     NotConnected
     ""
     { name = "-", sources = []}
+    (SpecialSources Nothing Nothing Nothing Nothing Nothing)
     [ AlarmRule "BRB - text 2" Visible "Podcaster - audio" Live
     , AlarmRule "BRB - text 2" Hidden "Podcaster - audio" Muted
     ]
@@ -77,18 +79,13 @@ update msg model =
     OBS (Ok (Response id (Response.Authenticate))) ->
       authenticated model
     OBS (Ok (Response id (Response.CurrentScene scene))) ->
-      ( { model | currentScene = scene }
-      , scene.sources
-        |> List.map (.name >> Request.getMute >> obsSend)
-        |> Cmd.batch
-      )
+      updateSources model scene model.specialSources
     OBS (Ok (Response id (Response.GetMuted sourceName audio))) ->
       ( checkAlarms {model | currentScene = setAudio model.currentScene sourceName audio}
       , Cmd.none
       )
     OBS (Ok (Response id (Response.GetSpecialSources sources))) ->
-      let _ = Debug.log "special" sources in
-      (model, Cmd.none)
+      updateSources model model.currentScene sources
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
@@ -161,6 +158,40 @@ setAudio scene sourceName audio =
         source )
       scene.sources
   }
+
+updateSources : Model -> Scene -> SpecialSources -> (Model, Cmd Msg)
+updateSources model scene specialSources =
+  let scenePlus = addSpecialSources specialSources scene in
+  ( { model
+    | currentScene = scenePlus
+    , specialSources = specialSources
+    }
+  , scenePlus.sources
+    |> List.map (.name >> Request.getMute >> obsSend)
+    |> Cmd.batch
+  )
+
+addSpecialSources : SpecialSources -> Scene -> Scene
+addSpecialSources specialSources scene =
+  { scene | sources =
+    scene.sources
+      |> List.map .name
+      |> Set.fromList
+      |> Set.diff (specialSourceNames specialSources |> Set.fromList)
+      |> Set.toList
+      |> List.map (\name -> Source name Hidden "special-source" 1.0 Live)
+      |> List.append scene.sources
+  }
+
+specialSourceNames : SpecialSources -> List String
+specialSourceNames sources = 
+  List.filterMap identity
+    [ sources.desktop1
+    , sources.desktop2
+    , sources.mic1
+    , sources.mic2
+    , sources.mic3
+    ]
 
 checkAlarms : Model -> Model
 checkAlarms model =
