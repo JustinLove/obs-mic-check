@@ -8,6 +8,7 @@ type Request
   | Authenticate String
   | GetCurrentScene
   | GetMute String
+  | GetSpecialSources
 
 basicRequest : Request -> Value
 basicRequest req =
@@ -41,3 +42,5 @@ getMute source =
     , ("source", string source)
     ]
 
+getSpecialSources : Value
+getSpecialSources = basicRequest GetSpecialSources

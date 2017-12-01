@@ -86,6 +86,9 @@ update msg model =
       ( checkAlarms {model | currentScene = setAudio model.currentScene sourceName audio}
       , Cmd.none
       )
+    OBS (Ok (Response id (Response.GetSpecialSources sources))) ->
+      let _ = Debug.log "special" sources in
+      (model, Cmd.none)
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
@@ -121,7 +124,10 @@ attemptToConnect =
 authenticated : Model -> (Model, Cmd Msg)
 authenticated model =
   ( { model | connected = authenticatedStatus model.connected}
-  , obsSend <| Request.getCurrentScene
+  , Cmd.batch
+    [ obsSend <| Request.getCurrentScene
+    , obsSend <| Request.getSpecialSources
+    ]
   )
 
 authenticatedStatus : ConnectionStatus -> ConnectionStatus

@@ -26,7 +26,6 @@ type alias Source =
   , audio : Audio
   }
 
-
 type Render
   = Visible
   | Hidden
@@ -34,6 +33,14 @@ type Render
 type Audio
   = Live
   | Muted
+
+type alias SpecialSources =
+  { desktop1 : Maybe String
+  , desktop2 : Maybe String
+  , mic1 : Maybe String
+  , mic2 : Maybe String
+  , mic3 : Maybe String
+  }
 
 render : Decoder Render
 render =

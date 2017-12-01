@@ -11,6 +11,7 @@ type ResponseData
   | Authenticate
   | CurrentScene Scene
   | GetMuted String Audio
+  | GetSpecialSources SpecialSources
 
 response : Decoder ResponseData
 response =
@@ -20,6 +21,7 @@ response =
     , authenticate
     , currentScene
     , getMuted
+    , getSpecialSources
     ]
 
 getVersion : Decoder ResponseData
@@ -79,3 +81,13 @@ getMuted =
   map2 GetMuted
     (field "name" string)
     (field "muted" muted)
+
+getSpecialSources : Decoder ResponseData
+getSpecialSources =
+  map5 SpecialSources
+    (maybe (field "desktop-1" string))
+    (maybe (field "desktop-2" string))
+    (maybe (field "mic-1" string))
+    (maybe (field "mic-2" string))
+    (maybe (field "mic-3" string))
+  |> map GetSpecialSources
