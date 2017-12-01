@@ -26,6 +26,9 @@ view model =
     , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
+    , model.alarms
+      |> List.map displayRule
+      |> ul [ class "rule" ]
     , displayScene model.rules model.currentScene
     ]
 
@@ -76,6 +79,8 @@ displayRule : AlarmRule -> Html ViewMsg
 displayRule rule =
   li []
     [ renderStatus rule.render
+    , text " "
+    , text rule.videoSourceName
     , text " "
     , text rule.audioSourceName
     , text " "

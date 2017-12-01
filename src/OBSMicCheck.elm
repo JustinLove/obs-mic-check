@@ -35,6 +35,7 @@ type alias Model =
   , password : String
   , currentScene : Scene
   , rules : List AlarmRule
+  , alarms : List AlarmRule
   }
 
 init : (Model, Cmd Msg)
@@ -50,6 +51,7 @@ makeModel =
     [ AlarmRule "BRB - text 2" Visible "Podcaster - audio" Live
     , AlarmRule "BRB - text 2" Hidden "Podcaster - audio" Muted
     ]
+    []
 
 -- UPDATE
 
@@ -87,7 +89,10 @@ update msg model =
       if model.connected == NotConnected then
         (model, attemptToConnect)
       else
-        (model, Cmd.none)
+        if status.streaming then
+          (checkAlarms model, Cmd.none)
+        else
+          (model, Cmd.none)
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
@@ -125,6 +130,12 @@ setAudio scene sourceName audio =
         else
         source )
       scene.sources
+  }
+
+checkAlarms : Model -> Model
+checkAlarms model =
+  { model | alarms =
+    List.filter (AlarmRule.checkRule model.currentScene.sources) model.rules
   }
 
 obsSend : Json.Encode.Value -> Cmd Msg
