@@ -7,6 +7,7 @@ type ResponseData
   | AuthRequired Challenge
   | AuthNotRequired
   | Authenticate
+  | CurrentScene Scene
 
 response : Decoder ResponseData
 response =
@@ -14,6 +15,7 @@ response =
     [ getVersion
     , getAuthRequired
     , authenticate
+    , currentScene
     ]
 
 type alias Version =
@@ -59,3 +61,33 @@ authenticate =
       ("Authenticate", "error") -> fail "Authentication failed"
       _ -> fail "Decoder does not apply"
     )
+
+type alias Scene =
+  { name : String
+  , sources : List Source
+  }
+
+type alias Source =
+  { name : String
+  , render : Bool
+  , type_ : String
+  , volume : Float
+  }
+
+currentScene : Decoder ResponseData
+currentScene =
+  scene |> map CurrentScene
+
+scene : Decoder Scene
+scene =
+  map2 Scene
+    (field "name" string)
+    (field "sources" (list source))
+
+source : Decoder Source
+source =
+  map4 Source
+    (field "name" string)
+    (field "render" bool)
+    (field "type" string)
+    (field "volume" float)

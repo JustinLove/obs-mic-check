@@ -3,7 +3,7 @@ module OBSMicCheck exposing (..)
 import View exposing (view, ViewMsg(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
-import OBSWebSocket.Response as Response exposing (ResponseData)
+import OBSWebSocket.Response as Response exposing (ResponseData, Scene, Source)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 
@@ -32,6 +32,7 @@ type ConnectionStatus
 type alias Model =
   { connected : ConnectionStatus
   , password : String
+  , currentScene : Scene
   }
 
 init : (Model, Cmd Msg)
@@ -39,7 +40,7 @@ init =
 --let _ = Debug.log "auth" (OBSWebSocket.authenticate "supersecretpassword" "PZVbYpvAnZut2SS6JNJytDm9" "ztTBnnuqrqaKDzRM3xcVdbYm") in
 -- hash Ln68W1UNXYyY7xDwp+h5foYLI6bzI1qZjKokTa5ZdwE=
 -- auth zZgWipvwSGrw748kHN4gNpBC1IaeiiWX3Hjkrm849Sc=
-  (Model NotConnected "password", Cmd.none)
+  (Model NotConnected "password" { name = "-", sources = []}, Cmd.none)
 
 -- UPDATE
 
@@ -62,6 +63,9 @@ update msg model =
       authenticated model
     OBS (Ok (Response id (Response.Authenticate))) ->
       authenticated model
+    OBS (Ok (Response id (Response.CurrentScene scene))) ->
+      let _ = Debug.log "scene" scene in
+      ({ model | currentScene = scene }, Cmd.none)
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
