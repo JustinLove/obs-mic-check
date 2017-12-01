@@ -17,11 +17,16 @@ type ViewMsg
 css = """
 .audio.muted { color: white; background-color: red; }
 .hidden { opacity: 0.5; }
+.alarms { background-color: #FBB; }
 """
 
 -- view : Model -> Html ViewMsg
 view model =
-  div []
+  div
+    [ classList
+      [ ("alarms", not <| List.isEmpty model.alarms)
+      ]
+    ]
     [ node "style" [] [ text css ]
     , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
