@@ -1,5 +1,7 @@
 module OBSWebSocket.Response exposing (..)
 
+import OBSWebSocket.Data exposing (..)
+
 import Json.Decode exposing (..)
 
 type ResponseData
@@ -20,23 +22,12 @@ response =
     , getMuted
     ]
 
-type alias Version =
-  { obsWebsocketVersion : String
-  , obsStudioVersion : String
-  -- availableRequests
-  }
-
 getVersion : Decoder ResponseData
 getVersion =
   map2 Version
     (field "obs-websocket-version" string)
     (field "obs-studio-version" string)
   |> map GetVersion 
-
-type alias Challenge =
-  { challenge : String
-  , salt : String
-  }
 
 getAuthRequired : Decoder ResponseData
 getAuthRequired =
@@ -63,27 +54,6 @@ authenticate =
       ("Authenticate", "error") -> fail "Authentication failed"
       _ -> fail "Decoder does not apply"
     )
-
-type alias Scene =
-  { name : String
-  , sources : List Source
-  }
-
-type Render
-  = Visible
-  | Hidden
-
-type Audio
-  = Live
-  | Muted
-
-type alias Source =
-  { name : String
-  , render : Render
-  , type_ : String
-  , volume : Float
-  , audio : Audio
-  }
 
 currentScene : Decoder ResponseData
 currentScene =

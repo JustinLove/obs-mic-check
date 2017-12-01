@@ -1,6 +1,6 @@
 module View exposing (view, ViewMsg(..))
 
-import OBSWebSocket.Response as Response exposing (Scene, Source, Render(..), Audio(..))
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
 import AlarmRule exposing (AlarmRule)
 
 import Html exposing (..)

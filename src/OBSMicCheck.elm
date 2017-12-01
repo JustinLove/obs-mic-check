@@ -3,7 +3,8 @@ module OBSMicCheck exposing (..)
 import View exposing (view, ViewMsg(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
-import OBSWebSocket.Response as Response exposing (ResponseData, Scene, Source, Render(..), Audio(..))
+import OBSWebSocket.Response as Response exposing (ResponseData)
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 import AlarmRule exposing (AlarmRule)

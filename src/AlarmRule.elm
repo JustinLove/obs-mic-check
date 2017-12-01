@@ -1,6 +1,6 @@
 module AlarmRule exposing (AlarmRule, checkRule)
 
-import OBSWebSocket.Response as Response exposing (Source, Render(..), Audio(..))
+import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
 
 type alias AlarmRule =
   { videoSourceName : String
