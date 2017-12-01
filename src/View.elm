@@ -1,6 +1,7 @@
 module View exposing (view, ViewMsg(..))
 
 import OBSWebSocket.Response as Response exposing (Scene, Source, Render(..), Audio(..))
+import AlarmRule exposing (AlarmRule)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -25,31 +26,38 @@ view model =
     , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , displayScene model.currentScene
+    , displayScene model.rules model.currentScene
     ]
 
-displayScene : Scene -> Html ViewMsg
-displayScene scene =
+displayScene : List AlarmRule -> Scene -> Html ViewMsg
+displayScene rules scene =
   div []
     [ h2 [] [ text scene.name ]
-    , ul [] <| List.map displaySource scene.sources
+    , ul [] <| List.map (displaySource rules) scene.sources
     ]
 
-displaySource : Source -> Html ViewMsg
-displaySource source =
+displaySource : List AlarmRule -> Source -> Html ViewMsg
+displaySource rules source =
   ul
     [ classList 
       [ ("hidden", source.render == Hidden)
       , ("visible", source.render == Visible)
+      , ("source", True)
       ]
     ]
-    [ renderStatus source.render
-    , text " "
-    , audioStatus source.audio
-    , text " "
-    , text source.name
-    , text " "
-    , em [] [ text source.type_ ]
+    [ h3 []
+      [ renderStatus source.render
+      , text " "
+      , audioStatus source.audio
+      , text " "
+      , text source.name
+      , text " "
+      , em [] [ text source.type_ ]
+      ]
+    , rules
+        |> List.filter (\rule -> rule.videoSourceName == source.name)
+        |> List.map displayRule
+        |> ul [ class "rule" ]
     ]
 
 renderStatus : Render -> Html ViewMsg
@@ -64,3 +72,12 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
+displayRule : AlarmRule -> Html ViewMsg
+displayRule rule =
+  li []
+    [ renderStatus rule.render
+    , text " "
+    , text rule.audioSourceName
+    , text " "
+    , audioStatus rule.audio
+    ]

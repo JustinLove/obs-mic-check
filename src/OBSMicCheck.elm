@@ -6,6 +6,7 @@ import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData, Scene, Source, Render(..), Audio(..))
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
+import AlarmRule exposing (AlarmRule)
 
 import Html
 import WebSocket
@@ -33,11 +34,22 @@ type alias Model =
   { connected : ConnectionStatus
   , password : String
   , currentScene : Scene
+  , rules : List AlarmRule
   }
 
 init : (Model, Cmd Msg)
 init =
-  (Model NotConnected "password" { name = "-", sources = []}, Cmd.none)
+  (makeModel, Cmd.none)
+
+makeModel : Model
+makeModel =
+  Model
+    NotConnected
+    ""
+    { name = "-", sources = []}
+    [ AlarmRule "BRB - text 2" Visible "Podcaster - audio" Live
+    , AlarmRule "BRB - text 2" Hidden "Podcaster - audio" Muted
+    ]
 
 -- UPDATE
 
