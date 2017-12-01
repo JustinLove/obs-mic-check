@@ -15,6 +15,7 @@ type ViewMsg
 
 css = """
 .audio.muted { color: white; background-color: red; }
+.hidden { opacity: 0.5; }
 """
 
 -- view : Model -> Html ViewMsg
@@ -36,8 +37,13 @@ displayScene scene =
 
 displaySource : Source -> Html ViewMsg
 displaySource source =
-  ul []
-    [ text (if source.render then "O" else "-")
+  ul
+    [ classList 
+      [ ("hidden", not source.render)
+      , ("visible", source.render)
+      ]
+    ]
+    [ renderStatus source.render
     , text " "
     , muteStatus source.muted
     , text " "
@@ -45,6 +51,13 @@ displaySource source =
     , text " "
     , em [] [ text source.type_ ]
     ]
+
+renderStatus : Bool -> Html ViewMsg
+renderStatus render =
+  if render then
+    span [ class "video" ] [ text "O" ]
+  else
+    span [ class "video" ] [ text "-" ]
 
 muteStatus : Bool -> Html ViewMsg
 muteStatus muted =
