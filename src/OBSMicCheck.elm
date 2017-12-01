@@ -61,7 +61,6 @@ update msg model =
     OBS (Ok (Response id (Response.Authenticate))) ->
       authenticated model
     OBS (Ok (Response id (Response.CurrentScene scene))) ->
-      let _ = Debug.log "scene" scene in
       ({ model | currentScene = scene }, Cmd.none)
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
