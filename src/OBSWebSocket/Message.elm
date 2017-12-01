@@ -22,5 +22,5 @@ message : Decoder Message
 message =
   oneOf
     [ Response.response |> responseWrapper
-    , Event.streamStatus |> eventWrapper
+    , Event.event |> eventWrapper
     ]

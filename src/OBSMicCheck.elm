@@ -81,8 +81,8 @@ update msg model =
         |> List.map (.name >> Request.getMute >> obsSend)
         |> Cmd.batch
       )
-    OBS (Ok (Response id (Response.GetMuted sceneName audio))) ->
-      ( {model | currentScene = setAudio model.currentScene sceneName audio}
+    OBS (Ok (Response id (Response.GetMuted sourceName audio))) ->
+      ( {model | currentScene = setAudio model.currentScene sourceName audio}
       , Cmd.none
       )
     OBS (Ok (Event (Event.StreamStatus status))) ->
@@ -94,6 +94,10 @@ update msg model =
           (checkAlarms model, Cmd.none)
         else
           (model, Cmd.none)
+    OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
+      ( {model | currentScene = setRender model.currentScene sourceName render}
+      , Cmd.none
+      )
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
@@ -121,6 +125,17 @@ authenticatedStatus connected =
       Authenticated version 
     Authenticated version->
       Authenticated version 
+
+setRender : Scene -> String -> Render -> Scene
+setRender scene sourceName render =
+  { scene | sources =
+    List.map (\source ->
+        if source.name == sourceName then
+          { source | render = render }
+        else
+        source )
+      scene.sources
+  }
 
 setAudio : Scene -> String -> Audio -> Scene
 setAudio scene sourceName audio =

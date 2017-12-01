@@ -74,16 +74,8 @@ source =
     (field "volume" float)
     (succeed Live)
 
-render : Decoder Render
-render =
-  map (\b -> if b then Visible else Hidden) bool
-
 getMuted : Decoder ResponseData
 getMuted =
   map2 GetMuted
     (field "name" string)
     (field "muted" muted)
-
-muted : Decoder Audio
-muted =
-  map (\b -> if b then Muted else Live) bool
