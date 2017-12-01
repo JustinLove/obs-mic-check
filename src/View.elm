@@ -13,10 +13,15 @@ type ViewMsg
 
 -- VIEW
 
+css = """
+.audio.muted { color: white; background-color: red; }
+"""
+
 -- view : Model -> Html ViewMsg
 view model =
   div []
-    [ input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
+    [ node "style" [] [ text css ]
+    , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
     , displayScene model.currentScene
@@ -34,7 +39,17 @@ displaySource source =
   ul []
     [ text (if source.render then "O" else "-")
     , text " "
+    , muteStatus source.muted
+    , text " "
     , text source.name
     , text " "
     , em [] [ text source.type_ ]
     ]
+
+muteStatus : Bool -> Html ViewMsg
+muteStatus muted =
+  if muted then
+    span [ class "audio muted" ] [ text "<X " ]
+  else
+    span [ class "audio" ] [ text "<))" ]
+

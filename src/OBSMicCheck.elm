@@ -66,6 +66,10 @@ update msg model =
         |> List.map (.name >> Request.getMute >> obsSend)
         |> Cmd.batch
       )
+    OBS (Ok (Response id (Response.Muted sceneName muted))) ->
+      ( {model | currentScene = setMuted model.currentScene sceneName muted}
+      , Cmd.none
+      )
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
@@ -99,6 +103,17 @@ authenticatedStatus connected =
       Authenticated version 
     Authenticated version->
       Authenticated version 
+
+setMuted : Scene -> String -> Bool -> Scene
+setMuted scene sourceName muted =
+  { scene | sources =
+    List.map (\source ->
+        if source.name == sourceName then
+          { source | muted = muted }
+        else
+        source )
+      scene.sources
+  }
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =

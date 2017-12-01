@@ -8,6 +8,7 @@ type ResponseData
   | AuthNotRequired
   | Authenticate
   | CurrentScene Scene
+  | Muted String Bool
 
 response : Decoder ResponseData
 response =
@@ -16,6 +17,7 @@ response =
     , getAuthRequired
     , authenticate
     , currentScene
+    , muted
     ]
 
 type alias Version =
@@ -72,6 +74,7 @@ type alias Source =
   , render : Bool
   , type_ : String
   , volume : Float
+  , muted : Bool
   }
 
 currentScene : Decoder ResponseData
@@ -86,8 +89,15 @@ scene =
 
 source : Decoder Source
 source =
-  map4 Source
+  map5 Source
     (field "name" string)
     (field "render" bool)
     (field "type" string)
     (field "volume" float)
+    (succeed False)
+
+muted : Decoder ResponseData
+muted =
+  map2 Muted
+    (field "name" string)
+    (field "muted" bool)
