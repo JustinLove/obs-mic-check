@@ -82,7 +82,7 @@ update msg model =
         |> Cmd.batch
       )
     OBS (Ok (Response id (Response.GetMuted sourceName audio))) ->
-      ( {model | currentScene = setAudio model.currentScene sourceName audio}
+      ( checkAlarms {model | currentScene = setAudio model.currentScene sourceName audio}
       , Cmd.none
       )
     OBS (Ok (Event (Event.StreamStatus status))) ->
@@ -95,7 +95,7 @@ update msg model =
         else
           (model, Cmd.none)
     OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
-      ( {model | currentScene = setRender model.currentScene sourceName render}
+      ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
       )
     OBS (Err message) ->
