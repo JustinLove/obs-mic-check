@@ -61,7 +61,11 @@ update msg model =
     OBS (Ok (Response id (Response.Authenticate))) ->
       authenticated model
     OBS (Ok (Response id (Response.CurrentScene scene))) ->
-      ({ model | currentScene = scene }, Cmd.none)
+      ( { model | currentScene = scene }
+      , scene.sources
+        |> List.map (.name >> Request.getMute >> obsSend)
+        |> Cmd.batch
+      )
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then

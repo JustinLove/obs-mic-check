@@ -7,6 +7,7 @@ type Request
   | GetAuthRequired
   | Authenticate String
   | GetCurrentScene
+  | GetMute String
 
 basicRequest : Request -> Value
 basicRequest req =
@@ -31,3 +32,12 @@ authenticate auth =
 
 getCurrentScene : Value
 getCurrentScene = basicRequest GetCurrentScene
+
+getMute : String -> Value
+getMute source =
+  object
+    [ ("request-type", string "GetMute")
+    , ("message-id", string "GetMute")
+    , ("source", string source)
+    ]
+
