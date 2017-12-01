@@ -13,6 +13,7 @@ import Html
 import WebSocket
 import Json.Decode
 import Json.Encode
+import Set
 
 obsAddress = "ws://localhost:4444"
 
@@ -91,7 +92,14 @@ update msg model =
         (model, attemptToConnect)
       else
         if status.streaming then
-          (checkAlarms model, Cmd.none)
+          (checkAlarms model
+          , model.rules
+            |> List.map .audioSourceName
+            |> Set.fromList
+            |> Set.toList
+            |> List.map (Request.getMute >> obsSend)
+            |> Cmd.batch
+          )
         else
           (model, Cmd.none)
     OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
