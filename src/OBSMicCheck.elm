@@ -7,7 +7,7 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import AlarmRule exposing (AlarmRule)
+import AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..))
 
 import Html
 import WebSocket
@@ -52,8 +52,18 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    [ AlarmRule "BRB - text 2" Visible "Podcaster - audio" Live
-    , AlarmRule "BRB - text 2" Hidden "Podcaster - audio" Muted
+    [ AlarmRule
+      (SourceRule "BRB - text 2" Visible) 
+      (AudioRule "Podcaster - audio" Live)
+    , AlarmRule
+      (SourceRule "Starting soon - text" Visible) 
+      (AudioRule "Podcaster - audio" Live)
+    , AlarmRule
+      (SourceRule "Stream over - text" Visible) 
+      (AudioRule "Podcaster - audio" Live)
+    , AlarmRule
+      DefaultRule
+      (AudioRule "Podcaster - audio" Muted)
     ]
     []
 
@@ -94,7 +104,7 @@ update msg model =
         if status.streaming then
           (checkAlarms model
           , model.rules
-            |> List.map .audioSourceName
+            |> List.map (\(AlarmRule _ (AudioRule audioName _)) -> audioName)
             |> Set.fromList
             |> Set.toList
             |> List.map (Request.getMute >> obsSend)

@@ -1,7 +1,7 @@
 module View exposing (view, ViewMsg(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
-import AlarmRule exposing (AlarmRule)
+import AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..), matchesVideoSource)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -63,7 +63,7 @@ displaySource rules source =
       , em [] [ text source.type_ ]
       ]
     , rules
-        |> List.filter (\rule -> rule.videoSourceName == source.name)
+        |> List.filter (matchesVideoSource source)
         |> List.map displayRule
         |> ul [ class "rule" ]
     ]
@@ -81,13 +81,32 @@ audioStatus audio =
     Live -> span [ class "audio live" ] [ text "<))" ]
 
 displayRule : AlarmRule -> Html ViewMsg
-displayRule rule =
+displayRule (AlarmRule video audio) =
   li []
-    [ renderStatus rule.render
+    [ (displayVideoRule video)
     , text " "
-    , text rule.videoSourceName
-    , text " "
-    , text rule.audioSourceName
-    , text " "
-    , audioStatus rule.audio
+    , (displayAudioRule audio)
     ]
+
+displayVideoRule : VideoRule -> Html ViewMsg
+displayVideoRule videoRule =
+  case videoRule of 
+    SourceRule sourceName render ->
+      span []
+        [ renderStatus render
+        , text " "
+        , text sourceName
+        ]
+    DefaultRule ->
+      span [] [ text "Default" ]
+
+
+displayAudioRule : AudioRule -> Html ViewMsg
+displayAudioRule audioRule =
+  case audioRule of 
+    AudioRule sourceName audio ->
+      span []
+        [ text sourceName
+        , text " "
+        , audioStatus audio
+        ]
