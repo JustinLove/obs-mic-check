@@ -38,7 +38,7 @@ type alias Model =
   , currentScene : Scene
   , specialSources : SpecialSources
   , rules : List AlarmRule
-  , alarms : List AlarmRule
+  , alarm : Maybe AlarmRule
   }
 
 init : (Model, Cmd Msg)
@@ -65,7 +65,7 @@ makeModel =
       DefaultRule
       (AudioRule "Podcaster - audio" Muted)
     ]
-    []
+    Nothing
 
 -- UPDATE
 
@@ -205,8 +205,8 @@ specialSourceNames sources =
 
 checkAlarms : Model -> Model
 checkAlarms model =
-  { model | alarms =
-    List.filter (AlarmRule.checkRule model.currentScene.sources) model.rules
+  { model | alarm =
+    AlarmRule.alarmingRule model.currentScene.sources model.rules
   }
 
 obsSend : Json.Encode.Value -> Cmd Msg

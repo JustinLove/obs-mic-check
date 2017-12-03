@@ -24,15 +24,17 @@ css = """
 view model =
   div
     [ classList
-      [ ("alarms", not <| List.isEmpty model.alarms)
+      [ ("alarms", model.alarm /= Nothing)
       ]
     ]
     [ node "style" [] [ text css ]
     , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , model.alarms
-      |> List.map displayRule
+    , model.alarm
+      |> Maybe.map displayRule
+      |> Maybe.map List.singleton
+      |> Maybe.withDefault []
       |> ul [ class "rule" ]
     , displayScene model.rules model.currentScene
     ]
