@@ -61,21 +61,6 @@ currentScene : Decoder ResponseData
 currentScene =
   scene |> map CurrentScene
 
-scene : Decoder Scene
-scene =
-  map2 Scene
-    (field "name" string)
-    (field "sources" (list source))
-
-source : Decoder Source
-source =
-  map5 Source
-    (field "name" string)
-    (field "render" render)
-    (field "type" string)
-    (field "volume" float)
-    (succeed Live)
-
 getMuted : Decoder ResponseData
 getMuted =
   map2 GetMuted

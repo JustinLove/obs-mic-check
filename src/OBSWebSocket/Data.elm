@@ -42,6 +42,25 @@ type alias SpecialSources =
   , mic3 : Maybe String
   }
 
+scene : Decoder Scene
+scene =
+  map2 Scene
+    (oneOf
+      [ (field "name" string)
+      , (field "scene-name" string)
+      ]
+    )
+    (field "sources" (list source))
+
+source : Decoder Source
+source =
+  map5 Source
+    (field "name" string)
+    (field "render" render)
+    (field "type" string)
+    (field "volume" float)
+    (succeed Live)
+
 render : Decoder Render
 render =
   map (\b -> if b then Visible else Hidden) bool

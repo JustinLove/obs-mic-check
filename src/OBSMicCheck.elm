@@ -100,6 +100,16 @@ update msg model =
       )
     OBS (Ok (Response id (Response.GetSpecialSources sources))) ->
       updateSources model model.currentScene sources
+    OBS (Ok (Event (Event.SwitchScenes scene))) ->
+      updateSources model scene model.specialSources
+    OBS (Ok (Event (Event.SceneItemAdded sceneName sourceName))) ->
+      (model, refreshScene)
+    OBS (Ok (Event (Event.SceneItemRemoved sceneName sourceName))) ->
+      (model, refreshScene)
+    OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
+      ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
+      , Cmd.none
+      )
     OBS (Ok (Event (Event.StreamStatus status))) ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
@@ -114,14 +124,6 @@ update msg model =
           )
         else
           (model, Cmd.none)
-    OBS (Ok (Event (Event.SceneItemAdded sceneName sourceName))) ->
-      (model, refreshScene)
-    OBS (Ok (Event (Event.SceneItemRemoved sceneName sourceName))) ->
-      (model, refreshScene)
-    OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
-      ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
-      , Cmd.none
-      )
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
