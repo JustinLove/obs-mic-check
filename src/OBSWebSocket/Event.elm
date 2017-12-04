@@ -5,7 +5,8 @@ import OBSWebSocket.Data exposing (..)
 import Json.Decode exposing (..)
 
 type EventData
-  = SwitchScenes Scene
+  = IgnoredEvent String
+  | SwitchScenes Scene
   | SceneItemAdded String String
   | SceneItemRemoved String String
   | SceneItemVisibilityChanged String String Render
@@ -16,6 +17,7 @@ event =
   (field "update-type" string)
   |> andThen (\updateType -> case updateType of
     "SwitchScenes" -> switchScenes
+    "TransitionBegin" -> succeed (IgnoredEvent updateType)
     "SceneItemAdded" -> sceneItemAdded
     "SceneItemRemoved" -> sceneItemRemoved
     "SceneItemVisibilityChanged" -> sceneItemVisibilityChanged

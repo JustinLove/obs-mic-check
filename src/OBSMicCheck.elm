@@ -100,6 +100,8 @@ update msg model =
       )
     OBS (Ok (Response id (Response.GetSpecialSources sources))) ->
       updateSources model model.currentScene sources
+    OBS (Ok (Event (Event.IgnoredEvent updateType))) ->
+      (model, Cmd.none)
     OBS (Ok (Event (Event.SwitchScenes scene))) ->
       updateSources model scene model.specialSources
     OBS (Ok (Event (Event.SceneItemAdded sceneName sourceName))) ->
