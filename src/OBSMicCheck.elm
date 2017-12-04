@@ -115,11 +115,9 @@ update msg model =
         else
           (model, Cmd.none)
     OBS (Ok (Event (Event.SceneItemAdded sceneName sourceName))) ->
-      let _ = Debug.log "added" sourceName in
-      (model, Cmd.none)
+      (model, refreshScene)
     OBS (Ok (Event (Event.SceneItemRemoved sceneName sourceName))) ->
-      let _ = Debug.log "removed" sourceName in
-      (model, Cmd.none)
+      (model, refreshScene)
     OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
       ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
@@ -139,11 +137,15 @@ attemptToConnect =
 authenticated : Model -> (Model, Cmd Msg)
 authenticated model =
   ( { model | connected = authenticatedStatus model.connected}
-  , Cmd.batch
+  , refreshScene
+  )
+
+refreshScene : Cmd Msg
+refreshScene =
+  Cmd.batch
     [ obsSend <| Request.getCurrentScene
     , obsSend <| Request.getSpecialSources
     ]
-  )
 
 authenticatedStatus : ConnectionStatus -> ConnectionStatus
 authenticatedStatus connected =
