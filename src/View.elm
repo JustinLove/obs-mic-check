@@ -113,6 +113,14 @@ displayAudioRule audioRule =
         , audioStatus audio
         ]
     AnyAudio rules ->
-      span [] <| List.map displayAudioRule rules
+      span [] <| List.concat
+        [ [ text "any[" ]
+        , List.intersperse (text ", ") <| List.map displayAudioRule rules
+        , [ text "]" ]
+        ]
     AllAudio rules ->
-      span [] <| List.map displayAudioRule rules
+      span [] <| List.concat
+        [ [ text "all[" ]
+        , List.intersperse (text ", ") <| List.map displayAudioRule rules
+        , [ text "]" ]
+        ]
