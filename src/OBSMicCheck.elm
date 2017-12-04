@@ -45,6 +45,11 @@ init : (Model, Cmd Msg)
 init =
   (makeModel, Cmd.none)
 
+allMics audio =
+  [ (AudioRule "Podcaster - audio" audio)
+  , (AudioRule "Podcaster - Stepmania" audio)
+  ]
+
 makeModel : Model
 makeModel =
   Model
@@ -54,16 +59,16 @@ makeModel =
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
     [ AlarmRule
       (SourceRule "BRB - text 2" Visible) 
-      (AudioRule "Podcaster - audio" Live)
+      (AnyAudio (allMics Live))
     , AlarmRule
       (SourceRule "Starting soon - text" Visible) 
-      (AudioRule "Podcaster - audio" Live)
+      (AnyAudio (allMics Live))
     , AlarmRule
       (SourceRule "Stream over - text" Visible) 
-      (AudioRule "Podcaster - audio" Live)
+      (AnyAudio (allMics Live))
     , AlarmRule
       DefaultRule
-      (AudioRule "Podcaster - audio" Muted)
+      (AllAudio (allMics Muted))
     ]
     Nothing
 
@@ -104,7 +109,8 @@ update msg model =
         if status.streaming then
           (checkAlarms model
           , model.rules
-            |> List.map (\(AlarmRule _ (AudioRule audioName _)) -> audioName)
+            |> List.map (\(AlarmRule _ audioRule) -> AlarmRule.audioSourceNames audioRule)
+            |> List.concat
             |> Set.fromList
             |> Set.toList
             |> List.map (Request.getMute >> obsSend)

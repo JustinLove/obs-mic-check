@@ -112,3 +112,7 @@ displayAudioRule audioRule =
         , text " "
         , audioStatus audio
         ]
+    AnyAudio rules ->
+      span [] <| List.map displayAudioRule rules
+    AllAudio rules ->
+      span [] <| List.map displayAudioRule rules

@@ -45,25 +45,52 @@ all = describe "rules"
     , it "starting visible, muted audio" <|
       isFalse <| alarmRaised [ brb Hidden, starting Visible, podcaster Muted ] basicRules
     ]
+  , describe "multiple audio"
+    [ it "hidden, mics on" <|
+      isFalse <| alarmRaised [ brb Hidden, podcaster Live, stepmania Live ] multiMicRules
+    , it "visible, default mic on" <|
+      isTrue <| alarmRaised [ brb Visible, podcaster Live, stepmania Muted ] multiMicRules
+    , it "visible, stepmania mic on" <|
+      isTrue <| alarmRaised [ brb Visible, podcaster Muted, stepmania Live ] multiMicRules
+    , it "hidden, default mic muted" <|
+      isFalse <| alarmRaised [ brb Hidden, podcaster Muted, stepmania Live ] multiMicRules
+    , it "hidden, stepmania mic muted" <|
+      isFalse <| alarmRaised [ brb Hidden, podcaster Live, stepmania Muted ] multiMicRules
+    , it "hidden, all mics muted" <|
+      isTrue <| alarmRaised [ brb Hidden, podcaster Muted, stepmania Muted ] multiMicRules
+    , it "hidden, only one muted mic present" <|
+      isTrue <| alarmRaised [ brb Hidden, podcaster Muted ] multiMicRules
+    ]
   ]
 
 brb = layer "BRB - text 2"
 starting = layer "Starting soon - text"
 podcaster = mic "Podcaster - audio"
+stepmania = mic "Podcaster - Stepmania"
 
 basicRules = [ brbLive, startingLive, defaultMuted ]
+multiMicRules = [ brbLive, startingLive, multiMuted ]
+
+allMics audio =
+  [ (AudioRule "Podcaster - audio" audio)
+  , (AudioRule "Podcaster - Stepmania" audio)
+  ]
 
 brbLive = AlarmRule
   (SourceRule "BRB - text 2" Visible) 
-  (AudioRule "Podcaster - audio" Live)
+  (AnyAudio (allMics Live))
 
 startingLive = AlarmRule
   (SourceRule "Starting soon - text" Visible) 
-  (AudioRule "Podcaster - audio" Live)
+  (AnyAudio (allMics Live))
 
 defaultMuted = AlarmRule
   DefaultRule
   (AudioRule "Podcaster - audio" Muted)
+
+multiMuted = AlarmRule
+  DefaultRule
+  (AllAudio (allMics Muted))
 
 layer : String -> Render -> Source
 layer name render =

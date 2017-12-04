@@ -1,4 +1,4 @@
-module AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..), alarmingRule, checkRule, matchesVideoSource)
+module AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..), alarmingRule, checkRule, matchesVideoSource, audioSourceNames)
 
 import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
 
@@ -11,6 +11,8 @@ type VideoRule
 
 type AudioRule
   = AudioRule String Audio
+  | AnyAudio (List AudioRule)
+  | AllAudio (List AudioRule)
 
 alarmingRule : List Source -> List AlarmRule -> Maybe AlarmRule
 alarmingRule sources rules =
@@ -38,6 +40,20 @@ matchesVideoSource source (AlarmRule videoRule _) =
     DefaultRule ->
       False
 
+audioSourceNames : AudioRule -> List String
+audioSourceNames audioRule =
+  case audioRule of
+    AudioRule sourceName _ ->
+      [ sourceName ]
+    AnyAudio rules ->
+      rules
+        |> List.map audioSourceNames
+        |> List.concat
+    AllAudio rules ->
+      rules
+        |> List.map audioSourceNames
+        |> List.concat
+
 checkVideo : List Source -> AlarmRule -> Bool
 checkVideo sources (AlarmRule videoRule _) =
   case videoRule of
@@ -48,6 +64,22 @@ checkVideo sources (AlarmRule videoRule _) =
 
 checkAudio : List Source -> AlarmRule -> Bool
 checkAudio sources (AlarmRule _ audioRule) =
+  checkAudioRule sources audioRule
+
+checkAudioRule : List Source -> AudioRule -> Bool
+checkAudioRule sources audioRule =
   case audioRule of
-    AudioRule sourceName audio -> 
-      List.any (\s -> s.name == sourceName && s.audio == audio) sources
+    AudioRule sourceName audio ->
+      audio == (sources
+        |> List.filterMap (\s ->
+          if s.name == sourceName then
+           Just s.audio
+         else
+           Nothing)
+        |> List.head
+        |> Maybe.withDefault Muted
+      )
+    AnyAudio rules ->
+      List.any (checkAudioRule sources) rules
+    AllAudio rules ->
+      List.all (checkAudioRule sources) rules
