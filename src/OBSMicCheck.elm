@@ -114,6 +114,12 @@ update msg model =
           )
         else
           (model, Cmd.none)
+    OBS (Ok (Event (Event.SceneItemAdded sceneName sourceName))) ->
+      let _ = Debug.log "added" sourceName in
+      (model, Cmd.none)
+    OBS (Ok (Event (Event.SceneItemRemoved sceneName sourceName))) ->
+      let _ = Debug.log "removed" sourceName in
+      (model, Cmd.none)
     OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
       ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
