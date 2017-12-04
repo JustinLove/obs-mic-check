@@ -37,15 +37,28 @@ all = describe "rules"
     , it "hidden source, muted audio" <|
       isTrue <| alarmRaised [ brb Hidden, podcaster Muted ] basicRules
     ]
+  , describe "multiple layers"
+    [ it "hidden sources, live audio" <|
+      isFalse <| alarmRaised [ brb Hidden, starting Hidden, podcaster Live ] basicRules
+    , it "brb visible, muted audio" <|
+      isFalse <| alarmRaised [ brb Visible, starting Hidden, podcaster Muted ] basicRules
+    , it "starting visible, muted audio" <|
+      isFalse <| alarmRaised [ brb Hidden, starting Visible, podcaster Muted ] basicRules
+    ]
   ]
 
 brb = layer "BRB - text 2"
+starting = layer "Starting soon - text"
 podcaster = mic "Podcaster - audio"
 
-basicRules = [ brbLive, defaultMuted ]
+basicRules = [ brbLive, startingLive, defaultMuted ]
 
 brbLive = AlarmRule
   (SourceRule "BRB - text 2" Visible) 
+  (AudioRule "Podcaster - audio" Live)
+
+startingLive = AlarmRule
+  (SourceRule "Starting soon - text" Visible) 
   (AudioRule "Podcaster - audio" Live)
 
 defaultMuted = AlarmRule
