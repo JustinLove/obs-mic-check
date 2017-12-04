@@ -7,7 +7,7 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..))
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoRule(..), AudioRule(..))
 
 import Html
 import WebSocket
@@ -37,8 +37,8 @@ type alias Model =
   , password : String
   , currentScene : Scene
   , specialSources : SpecialSources
-  , rules : List AlarmRule
-  , alarm : Maybe AlarmRule
+  , ruleSet : RuleSet
+  , alarm : Maybe AudioRule
   }
 
 init : (Model, Cmd Msg)
@@ -57,19 +57,18 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    [ AlarmRule
-      (SourceRule "BRB - text 2" Visible) 
-      (AnyAudio (allMics Live))
-    , AlarmRule
-      (SourceRule "Starting soon - text" Visible) 
-      (AnyAudio (allMics Live))
-    , AlarmRule
-      (SourceRule "Stream over - text" Visible) 
-      (AnyAudio (allMics Live))
-    , AlarmRule
-      DefaultRule
-      (AllAudio (allMics Muted))
-    ]
+    ( RuleSet (AllAudio (allMics Muted))
+      [ AlarmRule
+        (SourceRule "BRB - text 2" Visible) 
+        (AnyAudio (allMics Live))
+      , AlarmRule
+        (SourceRule "Starting soon - text" Visible) 
+        (AnyAudio (allMics Live))
+      , AlarmRule
+        (SourceRule "Stream over - text" Visible) 
+        (AnyAudio (allMics Live))
+      ]
+    )
     Nothing
 
 -- UPDATE
@@ -108,11 +107,8 @@ update msg model =
       else
         if status.streaming then
           (checkAlarms model
-          , model.rules
-            |> List.map (\(AlarmRule _ audioRule) -> AlarmRule.audioSourceNames audioRule)
-            |> List.concat
-            |> Set.fromList
-            |> Set.toList
+          , model.ruleSet
+            |> AlarmRule.audioSourceNames
             |> List.map (Request.getMute >> obsSend)
             |> Cmd.batch
           )
@@ -212,7 +208,7 @@ specialSourceNames sources =
 checkAlarms : Model -> Model
 checkAlarms model =
   { model | alarm =
-    AlarmRule.alarmingRule model.currentScene.sources model.rules
+    AlarmRule.alarmingRule model.currentScene.sources model.ruleSet
   }
 
 obsSend : Json.Encode.Value -> Cmd Msg

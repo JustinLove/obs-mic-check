@@ -1,7 +1,7 @@
 module View exposing (view, ViewMsg(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
-import AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..), matchesVideoSource)
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoRule(..), AudioRule(..), matchesVideoSource)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -32,15 +32,15 @@ view model =
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
     , model.alarm
-      |> Maybe.map displayRule
+      |> Maybe.map displayAudioRule
       |> Maybe.map List.singleton
       |> Maybe.withDefault []
-      |> ul [ class "rule" ]
-    , displayScene model.rules model.currentScene
+      |> ul [ ]
+    , displayScene model.ruleSet model.currentScene
     ]
 
-displayScene : List AlarmRule -> Scene -> Html ViewMsg
-displayScene rules scene =
+displayScene : RuleSet -> Scene -> Html ViewMsg
+displayScene (RuleSet default rules) scene =
   div []
     [ h2 [] [ text scene.name ]
     , ul [] <| List.map (displaySource rules) scene.sources
@@ -99,8 +99,6 @@ displayVideoRule videoRule =
         , text " "
         , text sourceName
         ]
-    DefaultRule ->
-      span [] [ text "Default" ]
 
 
 displayAudioRule : AudioRule -> Html ViewMsg

@@ -1,32 +1,49 @@
-module AlarmRule exposing (AlarmRule(..), VideoRule(..), AudioRule(..), alarmingRule, checkRule, matchesVideoSource, audioSourceNames)
+module AlarmRule exposing
+  ( RuleSet(..)
+  , AlarmRule(..)
+  , VideoRule(..)
+  , AudioRule(..)
+  , alarmingRule
+  , checkRule
+  , matchesVideoSource
+  , audioSourceNames
+  )
 
 import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
+
+import Set
+
+type RuleSet
+  = RuleSet AudioRule (List AlarmRule)
 
 type AlarmRule
   = AlarmRule VideoRule AudioRule
 
 type VideoRule
   = SourceRule String Render
-  | DefaultRule
 
 type AudioRule
   = AudioRule String Audio
   | AnyAudio (List AudioRule)
   | AllAudio (List AudioRule)
 
-alarmingRule : List Source -> List AlarmRule -> Maybe AlarmRule
-alarmingRule sources rules =
-  activeRule sources rules
-    |> Maybe.andThen (\rule ->
-      if checkAudio sources rule then
-        Just rule
+alarmingRule : List Source -> RuleSet -> Maybe AudioRule
+alarmingRule sources ruleSet =
+  activeRule sources ruleSet
+    |> (\audioRule ->
+      if checkAudioRule sources audioRule then
+        Just audioRule
       else
         Nothing
       )
 
-activeRule : List Source -> List AlarmRule -> Maybe AlarmRule
-activeRule sources rules =
-  List.head <| List.filter (checkVideo sources) rules
+activeRule : List Source -> RuleSet -> AudioRule
+activeRule sources (RuleSet default rules) =
+  rules
+    |> List.filter (checkVideo sources)
+    |> List.head
+    |> Maybe.map (\(AlarmRule _ audio) -> audio)
+    |> Maybe.withDefault default
 
 checkRule : List Source -> AlarmRule -> Bool
 checkRule sources rule =
@@ -37,21 +54,30 @@ matchesVideoSource source (AlarmRule videoRule _) =
   case videoRule of
     SourceRule sourceName _ -> 
       source.name == sourceName
-    DefaultRule ->
-      False
 
-audioSourceNames : AudioRule -> List String
-audioSourceNames audioRule =
+
+audioSourceNames : RuleSet -> List String
+audioSourceNames (RuleSet default rules) =
+  rules
+    |> List.map (\(AlarmRule _ audioRule) -> audioRule)
+    |> (::) default
+    |> List.map audioRuleSourceNames
+    |> List.concat
+    |> Set.fromList
+    |> Set.toList
+
+audioRuleSourceNames : AudioRule -> List String
+audioRuleSourceNames audioRule =
   case audioRule of
     AudioRule sourceName _ ->
       [ sourceName ]
     AnyAudio rules ->
       rules
-        |> List.map audioSourceNames
+        |> List.map audioRuleSourceNames
         |> List.concat
     AllAudio rules ->
       rules
-        |> List.map audioSourceNames
+        |> List.map audioRuleSourceNames
         |> List.concat
 
 checkVideo : List Source -> AlarmRule -> Bool
@@ -59,8 +85,6 @@ checkVideo sources (AlarmRule videoRule _) =
   case videoRule of
     SourceRule sourceName render -> 
       List.any (\s -> s.name == sourceName && s.render == render) sources
-    DefaultRule ->
-      True
 
 checkAudio : List Source -> AlarmRule -> Bool
 checkAudio sources (AlarmRule _ audioRule) =
