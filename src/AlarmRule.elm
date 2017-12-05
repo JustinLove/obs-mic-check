@@ -5,7 +5,8 @@ module AlarmRule exposing
   , AudioRule(..)
   , AudioState(..)
   , Alarm(..)
-  , alarmingRule
+  , checkTimeout
+  , violatingRule
   , checkRule
   , matchesVideoSource
   , audioSourceNames
@@ -37,12 +38,24 @@ type Alarm
   | Violation AudioRule Int
   | Alarming AudioRule Int
 
-alarmingRule : List Source -> RuleSet -> Alarm
-alarmingRule sources ruleSet =
+checkTimeout : Int -> Alarm -> Alarm
+checkTimeout time alarm =
+  case alarm of
+    Active _ -> alarm
+    Violation (AudioRule state timeout) start ->
+      let _ = Debug.log "times" [time, start, timeout] in
+      if time - start > timeout then
+        Alarming (AudioRule state timeout) start
+      else 
+        alarm
+    Alarming _ _ -> alarm
+
+violatingRule : List Source -> RuleSet -> Int -> Alarm
+violatingRule sources ruleSet time =
   activeRule sources ruleSet
     |> (\audioRule ->
       if checkAudioRule sources audioRule then
-        Alarming audioRule 0
+        Violation audioRule time
       else
         Active audioRule
       )

@@ -141,7 +141,10 @@ updateEvent event model =
         (model, attemptToConnect)
       else
         if status.streaming then
-          (checkAlarms { model | time = status.totalStreamTime }
+          ( { model
+            | time = status.totalStreamTime
+            , alarm = AlarmRule.checkTimeout status.totalStreamTime model.alarm
+            }
           , model.ruleSet
             |> AlarmRule.audioSourceNames
             |> List.map (Request.getMute >> obsSend)
@@ -236,7 +239,7 @@ specialSourceNames sources =
 checkAlarms : Model -> Model
 checkAlarms model =
   { model | alarm =
-    AlarmRule.alarmingRule model.currentScene.sources model.ruleSet
+    AlarmRule.violatingRule model.currentScene.sources model.ruleSet model.time
   }
 
 obsSend : Json.Encode.Value -> Cmd Msg
