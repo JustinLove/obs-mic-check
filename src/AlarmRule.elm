@@ -4,6 +4,7 @@ module AlarmRule exposing
   , VideoState(..)
   , AudioRule(..)
   , AudioState(..)
+  , Alarm(..)
   , alarmingRule
   , checkRule
   , matchesVideoSource
@@ -31,14 +32,19 @@ type AudioState
   | AnyAudio (List AudioState)
   | AllAudio (List AudioState)
 
-alarmingRule : List Source -> RuleSet -> Maybe AudioRule
+type Alarm
+  = Active AudioRule
+  | Violation AudioRule Int
+  | Alarming AudioRule Int
+
+alarmingRule : List Source -> RuleSet -> Alarm
 alarmingRule sources ruleSet =
   activeRule sources ruleSet
     |> (\audioRule ->
       if checkAudioRule sources audioRule then
-        Just audioRule
+        Alarming audioRule 0
       else
-        Nothing
+        Active audioRule
       )
 
 activeRule : List Source -> RuleSet -> AudioRule

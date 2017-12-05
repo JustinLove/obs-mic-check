@@ -7,7 +7,7 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..))
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..))
 
 import Html
 import WebSocket
@@ -39,7 +39,7 @@ type alias Model =
   , currentScene : Scene
   , specialSources : SpecialSources
   , ruleSet : RuleSet
-  , alarm : Maybe AudioRule
+  , alarm : Alarm
   }
 
 init : (Model, Cmd Msg)
@@ -51,6 +51,8 @@ allMics audio =
   , (AudioState "Podcaster - Stepmania" audio)
   ]
 
+defaultAudio = AudioRule (AllAudio (allMics Muted)) 5
+
 makeModel : Model
 makeModel =
   Model
@@ -59,7 +61,7 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    ( RuleSet (AudioRule (AllAudio (allMics Muted)) 5)
+    ( RuleSet defaultAudio
       [ AlarmRule
         (VideoState "BRB - text 2" Visible) 
         (AudioRule (AnyAudio (allMics Live)) 5)
@@ -71,7 +73,7 @@ makeModel =
         (AudioRule (AnyAudio (allMics Live)) 60)
       ]
     )
-    Nothing
+    (Active defaultAudio)
 
 -- UPDATE
 

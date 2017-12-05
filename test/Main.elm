@@ -1,4 +1,4 @@
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), checkRule, alarmingRule)
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), checkRule, alarmingRule)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 
 import Expectation exposing (eql, isTrue, isFalse)
@@ -104,4 +104,8 @@ mic name audio =
   , audio = audio
   }
 
-alarmRaised sources rules = (alarmingRule sources rules) /= Nothing
+alarmRaised sources rules =
+  case alarmingRule sources rules of
+    Active _ -> False
+    Violation _ _ -> True
+    Alarming _ _ -> True
