@@ -14,6 +14,7 @@ import WebSocket
 import Json.Decode
 import Json.Encode
 import Set
+import Time exposing (Time, second)
 
 obsAddress = "ws://localhost:4444"
 
@@ -57,16 +58,19 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    ( RuleSet (AllAudio (allMics Muted))
+    ( RuleSet (AllAudio (allMics Muted)) (5 * second)
       [ AlarmRule
         (SourceRule "BRB - text 2" Visible) 
         (AnyAudio (allMics Live))
+        (5 * second)
       , AlarmRule
         (SourceRule "Starting soon - text" Visible) 
         (AnyAudio (allMics Live))
+        (5 * second)
       , AlarmRule
         (SourceRule "Stream over - text" Visible) 
         (AnyAudio (allMics Live))
+        (60 * second)
       ]
     )
     Nothing

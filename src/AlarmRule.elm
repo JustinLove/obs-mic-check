@@ -12,12 +12,13 @@ module AlarmRule exposing
 import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
 
 import Set
+import Time
 
 type RuleSet
-  = RuleSet AudioRule (List AlarmRule)
+  = RuleSet AudioRule Time.Time (List AlarmRule)
 
 type AlarmRule
-  = AlarmRule VideoRule AudioRule
+  = AlarmRule VideoRule AudioRule Time.Time
 
 type VideoRule
   = SourceRule String Render
@@ -38,11 +39,11 @@ alarmingRule sources ruleSet =
       )
 
 activeRule : List Source -> RuleSet -> AudioRule
-activeRule sources (RuleSet default rules) =
+activeRule sources (RuleSet default timeout rules) =
   rules
     |> List.filter (checkVideo sources)
     |> List.head
-    |> Maybe.map (\(AlarmRule _ audio) -> audio)
+    |> Maybe.map (\(AlarmRule _ audio _) -> audio)
     |> Maybe.withDefault default
 
 checkRule : List Source -> AlarmRule -> Bool
@@ -50,16 +51,15 @@ checkRule sources rule =
   (checkVideo sources rule) && (checkAudio sources rule)
 
 matchesVideoSource : Source -> AlarmRule -> Bool
-matchesVideoSource source (AlarmRule videoRule _) =
+matchesVideoSource source (AlarmRule videoRule _ _) =
   case videoRule of
     SourceRule sourceName _ -> 
       source.name == sourceName
 
-
 audioSourceNames : RuleSet -> List String
-audioSourceNames (RuleSet default rules) =
+audioSourceNames (RuleSet default timeout rules) =
   rules
-    |> List.map (\(AlarmRule _ audioRule) -> audioRule)
+    |> List.map (\(AlarmRule _ audioRule _) -> audioRule)
     |> (::) default
     |> List.map audioRuleSourceNames
     |> List.concat
@@ -81,13 +81,13 @@ audioRuleSourceNames audioRule =
         |> List.concat
 
 checkVideo : List Source -> AlarmRule -> Bool
-checkVideo sources (AlarmRule videoRule _) =
+checkVideo sources (AlarmRule videoRule _ _) =
   case videoRule of
     SourceRule sourceName render -> 
       List.any (\s -> s.name == sourceName && s.render == render) sources
 
 checkAudio : List Source -> AlarmRule -> Bool
-checkAudio sources (AlarmRule _ audioRule) =
+checkAudio sources (AlarmRule _ audioRule _) =
   checkAudioRule sources audioRule
 
 checkAudioRule : List Source -> AudioRule -> Bool

@@ -64,8 +64,8 @@ starting = layer "Starting soon - text"
 podcaster = mic "Podcaster - audio"
 stepmania = mic "Podcaster - Stepmania"
 
-basicRules = RuleSet defaultMuted [ brbLive, startingLive ]
-multiMicRules = RuleSet multiMuted [ brbLive, startingLive ]
+basicRules = RuleSet defaultMuted 0 [ brbLive, startingLive ]
+multiMicRules = RuleSet multiMuted 0 [ brbLive, startingLive ]
 
 allMics audio =
   [ (AudioRule "Podcaster - audio" audio)
@@ -75,10 +75,12 @@ allMics audio =
 brbLive = AlarmRule
   (SourceRule "BRB - text 2" Visible) 
   (AnyAudio (allMics Live))
+  0
 
 startingLive = AlarmRule
   (SourceRule "Starting soon - text" Visible) 
   (AnyAudio (allMics Live))
+  0
 
 defaultMuted =
   (AudioRule "Podcaster - audio" Muted)

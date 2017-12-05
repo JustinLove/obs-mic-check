@@ -40,7 +40,7 @@ view model =
     ]
 
 displayScene : RuleSet -> Scene -> Html ViewMsg
-displayScene (RuleSet default rules) scene =
+displayScene (RuleSet default _ rules) scene =
   div []
     [ h2 [] [ text scene.name ]
     , ul [] <| List.map (displaySource rules) scene.sources
@@ -83,7 +83,7 @@ audioStatus audio =
     Live -> span [ class "audio live" ] [ text "<))" ]
 
 displayRule : AlarmRule -> Html ViewMsg
-displayRule (AlarmRule video audio) =
+displayRule (AlarmRule video audio _) =
   li []
     [ (displayVideoRule video)
     , text " "
