@@ -7,7 +7,7 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoRule(..), AudioRule(..))
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..))
 
 import Html
 import WebSocket
@@ -47,8 +47,8 @@ init =
   (makeModel, Cmd.none)
 
 allMics audio =
-  [ (AudioRule "Podcaster - audio" audio)
-  , (AudioRule "Podcaster - Stepmania" audio)
+  [ (AudioState "Podcaster - audio" audio)
+  , (AudioState "Podcaster - Stepmania" audio)
   ]
 
 makeModel : Model
@@ -59,19 +59,16 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    ( RuleSet (AllAudio (allMics Muted)) 5
+    ( RuleSet (AudioRule (AllAudio (allMics Muted)) 5)
       [ AlarmRule
-        (SourceRule "BRB - text 2" Visible) 
-        (AnyAudio (allMics Live))
-        5
+        (VideoState "BRB - text 2" Visible) 
+        (AudioRule (AnyAudio (allMics Live)) 5)
       , AlarmRule
-        (SourceRule "Starting soon - text" Visible) 
-        (AnyAudio (allMics Live))
-        5
+        (VideoState "Starting soon - text" Visible) 
+        (AudioRule (AnyAudio (allMics Live)) 5)
       , AlarmRule
-        (SourceRule "Stream over - text" Visible) 
-        (AnyAudio (allMics Live))
-        60
+        (VideoState "Stream over - text" Visible) 
+        (AudioRule (AnyAudio (allMics Live)) 60)
       ]
     )
     Nothing

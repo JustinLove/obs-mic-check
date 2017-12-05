@@ -1,7 +1,7 @@
 module View exposing (view, ViewMsg(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoRule(..), AudioRule(..), matchesVideoSource)
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), matchesVideoSource)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -40,7 +40,7 @@ view model =
     ]
 
 displayScene : RuleSet -> Scene -> Html ViewMsg
-displayScene (RuleSet default _ rules) scene =
+displayScene (RuleSet default rules) scene =
   div []
     [ h2 [] [ text scene.name ]
     , ul [] <| List.map (displaySource rules) scene.sources
@@ -83,42 +83,45 @@ audioStatus audio =
     Live -> span [ class "audio live" ] [ text "<))" ]
 
 displayRule : AlarmRule -> Html ViewMsg
-displayRule (AlarmRule video audio _) =
+displayRule (AlarmRule video audio) =
   li []
     [ (displayVideoRule video)
     , text " "
     , (displayAudioRule audio)
     ]
 
-displayVideoRule : VideoRule -> Html ViewMsg
-displayVideoRule videoRule =
-  case videoRule of 
-    SourceRule sourceName render ->
+displayVideoRule : VideoState -> Html ViewMsg
+displayVideoRule videoState =
+  case videoState of 
+    VideoState sourceName render ->
       span []
         [ renderStatus render
         , text " "
         , text sourceName
         ]
 
-
 displayAudioRule : AudioRule -> Html ViewMsg
-displayAudioRule audioRule =
-  case audioRule of 
-    AudioRule sourceName audio ->
+displayAudioRule (AudioRule audioState timeout) =
+  displayAudioState audioState
+
+displayAudioState : AudioState -> Html ViewMsg
+displayAudioState audioState =
+  case audioState of 
+    AudioState sourceName audio ->
       span []
         [ text sourceName
         , text " "
         , audioStatus audio
         ]
-    AnyAudio rules ->
+    AnyAudio states ->
       span [] <| List.concat
         [ [ text "any[" ]
-        , List.intersperse (text ", ") <| List.map displayAudioRule rules
+        , List.intersperse (text ", ") <| List.map displayAudioState states
         , [ text "]" ]
         ]
-    AllAudio rules ->
+    AllAudio states ->
       span [] <| List.concat
         [ [ text "all[" ]
-        , List.intersperse (text ", ") <| List.map displayAudioRule rules
+        , List.intersperse (text ", ") <| List.map displayAudioState states
         , [ text "]" ]
         ]

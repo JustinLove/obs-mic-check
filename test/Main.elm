@@ -1,4 +1,4 @@
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoRule(..), AudioRule(..), checkRule, alarmingRule)
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), checkRule, alarmingRule)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 
 import Expectation exposing (eql, isTrue, isFalse)
@@ -64,29 +64,27 @@ starting = layer "Starting soon - text"
 podcaster = mic "Podcaster - audio"
 stepmania = mic "Podcaster - Stepmania"
 
-basicRules = RuleSet defaultMuted 0 [ brbLive, startingLive ]
-multiMicRules = RuleSet multiMuted 0 [ brbLive, startingLive ]
+basicRules = RuleSet defaultMuted [ brbLive, startingLive ]
+multiMicRules = RuleSet multiMuted [ brbLive, startingLive ]
 
 allMics audio =
-  [ (AudioRule "Podcaster - audio" audio)
-  , (AudioRule "Podcaster - Stepmania" audio)
+  [ (AudioState "Podcaster - audio" audio)
+  , (AudioState "Podcaster - Stepmania" audio)
   ]
 
 brbLive = AlarmRule
-  (SourceRule "BRB - text 2" Visible) 
-  (AnyAudio (allMics Live))
-  0
+  (VideoState "BRB - text 2" Visible) 
+  (AudioRule (AnyAudio (allMics Live)) 0)
 
 startingLive = AlarmRule
-  (SourceRule "Starting soon - text" Visible) 
-  (AnyAudio (allMics Live))
-  0
+  (VideoState "Starting soon - text" Visible) 
+  (AudioRule (AnyAudio (allMics Live)) 0)
 
 defaultMuted =
-  (AudioRule "Podcaster - audio" Muted)
+  (AudioRule (AudioState "Podcaster - audio" Muted) 0)
 
 multiMuted =
-  (AllAudio (allMics Muted))
+  (AudioRule (AllAudio (allMics Muted)) 0)
 
 layer : String -> Render -> Source
 layer name render =

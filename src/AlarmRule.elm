@@ -1,8 +1,9 @@
 module AlarmRule exposing
   ( RuleSet(..)
   , AlarmRule(..)
-  , VideoRule(..)
+  , VideoState(..)
   , AudioRule(..)
+  , AudioState(..)
   , alarmingRule
   , checkRule
   , matchesVideoSource
@@ -14,18 +15,21 @@ import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
 import Set
 
 type RuleSet
-  = RuleSet AudioRule Int (List AlarmRule)
+  = RuleSet AudioRule (List AlarmRule)
 
 type AlarmRule
-  = AlarmRule VideoRule AudioRule Int
+  = AlarmRule VideoState AudioRule
 
-type VideoRule
-  = SourceRule String Render
+type VideoState
+  = VideoState String Render
 
 type AudioRule
-  = AudioRule String Audio
-  | AnyAudio (List AudioRule)
-  | AllAudio (List AudioRule)
+  = AudioRule AudioState Int
+
+type AudioState
+  = AudioState String Audio
+  | AnyAudio (List AudioState)
+  | AllAudio (List AudioState)
 
 alarmingRule : List Source -> RuleSet -> Maybe AudioRule
 alarmingRule sources ruleSet =
@@ -38,11 +42,11 @@ alarmingRule sources ruleSet =
       )
 
 activeRule : List Source -> RuleSet -> AudioRule
-activeRule sources (RuleSet default timeout rules) =
+activeRule sources (RuleSet default rules) =
   rules
     |> List.filter (checkVideo sources)
     |> List.head
-    |> Maybe.map (\(AlarmRule _ audio _) -> audio)
+    |> Maybe.map (\(AlarmRule _ audio) -> audio)
     |> Maybe.withDefault default
 
 checkRule : List Source -> AlarmRule -> Bool
@@ -50,49 +54,54 @@ checkRule sources rule =
   (checkVideo sources rule) && (checkAudio sources rule)
 
 matchesVideoSource : Source -> AlarmRule -> Bool
-matchesVideoSource source (AlarmRule videoRule _ _) =
-  case videoRule of
-    SourceRule sourceName _ -> 
+matchesVideoSource source (AlarmRule videoState _) =
+  case videoState of
+    VideoState sourceName _ -> 
       source.name == sourceName
 
 audioSourceNames : RuleSet -> List String
-audioSourceNames (RuleSet default timeout rules) =
+audioSourceNames (RuleSet default rules) =
   rules
-    |> List.map (\(AlarmRule _ audioRule _) -> audioRule)
+    |> List.map (\(AlarmRule _ audioRule) -> audioRule)
     |> (::) default
-    |> List.map audioRuleSourceNames
+    |> List.map (\(AudioRule audioState _) -> audioState)
+    |> List.map audioStateSourceNames
     |> List.concat
     |> Set.fromList
     |> Set.toList
 
-audioRuleSourceNames : AudioRule -> List String
-audioRuleSourceNames audioRule =
-  case audioRule of
-    AudioRule sourceName _ ->
+audioStateSourceNames : AudioState -> List String
+audioStateSourceNames state =
+  case state of
+    AudioState sourceName _ ->
       [ sourceName ]
-    AnyAudio rules ->
-      rules
-        |> List.map audioRuleSourceNames
+    AnyAudio states ->
+      states
+        |> List.map audioStateSourceNames
         |> List.concat
-    AllAudio rules ->
-      rules
-        |> List.map audioRuleSourceNames
+    AllAudio states ->
+      states
+        |> List.map audioStateSourceNames
         |> List.concat
 
 checkVideo : List Source -> AlarmRule -> Bool
-checkVideo sources (AlarmRule videoRule _ _) =
-  case videoRule of
-    SourceRule sourceName render -> 
+checkVideo sources (AlarmRule videoState _) =
+  case videoState of
+    VideoState sourceName render -> 
       List.any (\s -> s.name == sourceName && s.render == render) sources
 
 checkAudio : List Source -> AlarmRule -> Bool
-checkAudio sources (AlarmRule _ audioRule _) =
+checkAudio sources (AlarmRule _ audioRule) =
   checkAudioRule sources audioRule
 
 checkAudioRule : List Source -> AudioRule -> Bool
-checkAudioRule sources audioRule =
-  case audioRule of
-    AudioRule sourceName audio ->
+checkAudioRule sources (AudioRule audioState _) =
+  checkAudioState sources audioState
+
+checkAudioState : List Source -> AudioState -> Bool
+checkAudioState sources audioState =
+  case audioState of
+    AudioState sourceName audio ->
       audio == (sources
         |> List.filterMap (\s ->
           if s.name == sourceName then
@@ -102,7 +111,7 @@ checkAudioRule sources audioRule =
         |> List.head
         |> Maybe.withDefault Muted
       )
-    AnyAudio rules ->
-      List.any (checkAudioRule sources) rules
-    AllAudio rules ->
-      List.all (checkAudioRule sources) rules
+    AnyAudio states ->
+      List.any (checkAudioState sources) states
+    AllAudio states ->
+      List.all (checkAudioState sources) states
