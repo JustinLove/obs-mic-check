@@ -12,13 +12,12 @@ module AlarmRule exposing
 import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
 
 import Set
-import Time
 
 type RuleSet
-  = RuleSet AudioRule Time.Time (List AlarmRule)
+  = RuleSet AudioRule Int (List AlarmRule)
 
 type AlarmRule
-  = AlarmRule VideoRule AudioRule Time.Time
+  = AlarmRule VideoRule AudioRule Int
 
 type VideoRule
   = SourceRule String Render

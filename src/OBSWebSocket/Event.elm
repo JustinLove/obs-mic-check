@@ -10,7 +10,7 @@ type EventData
   | SceneItemAdded String String
   | SceneItemRemoved String String
   | SceneItemVisibilityChanged String String Render
-  | StreamStatus StreamStatusStruct
+  | StreamStatus StatusReport
 
 event : Decoder EventData
 event =
@@ -53,15 +53,17 @@ sceneItemVisibilityChanged =
     (field "item-name" string)
     (field "item-visible" render)
 
-type alias StreamStatusStruct =
+type alias StatusReport =
   { streaming : Bool
   , recording : Bool
+  , totalStreamTime : Int
   }
 
 streamStatus : Decoder EventData
 streamStatus =
-  map2 StreamStatusStruct
+  map3 StatusReport
     (field "streaming" bool)
     (field "recording" bool)
+    (field "total-stream-time" int)
   |> map StreamStatus 
 

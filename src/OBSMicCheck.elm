@@ -14,7 +14,6 @@ import WebSocket
 import Json.Decode
 import Json.Encode
 import Set
-import Time exposing (Time, second)
 
 obsAddress = "ws://localhost:4444"
 
@@ -35,6 +34,7 @@ type ConnectionStatus
 
 type alias Model =
   { connected : ConnectionStatus
+  , time : Int
   , password : String
   , currentScene : Scene
   , specialSources : SpecialSources
@@ -55,22 +55,23 @@ makeModel : Model
 makeModel =
   Model
     NotConnected
+    0
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    ( RuleSet (AllAudio (allMics Muted)) (5 * second)
+    ( RuleSet (AllAudio (allMics Muted)) 5
       [ AlarmRule
         (SourceRule "BRB - text 2" Visible) 
         (AnyAudio (allMics Live))
-        (5 * second)
+        5
       , AlarmRule
         (SourceRule "Starting soon - text" Visible) 
         (AnyAudio (allMics Live))
-        (5 * second)
+        5
       , AlarmRule
         (SourceRule "Stream over - text" Visible) 
         (AnyAudio (allMics Live))
-        (60 * second)
+        60
       ]
     )
     Nothing
@@ -141,7 +142,7 @@ updateEvent event model =
         (model, attemptToConnect)
       else
         if status.streaming then
-          (checkAlarms model
+          (checkAlarms { model | time = status.totalStreamTime }
           , model.ruleSet
             |> AlarmRule.audioSourceNames
             |> List.map (Request.getMute >> obsSend)
