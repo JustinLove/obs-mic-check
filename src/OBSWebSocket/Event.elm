@@ -21,7 +21,12 @@ event =
     "SceneItemAdded" -> sceneItemAdded
     "SceneItemRemoved" -> sceneItemRemoved
     "SceneItemVisibilityChanged" -> sceneItemVisibilityChanged
+    "StreamStarting" -> succeed (IgnoredEvent updateType)
+    "StreamStarted" -> succeed (IgnoredEvent updateType)
+    "StreamStopping" -> succeed (IgnoredEvent updateType)
+    "StreamStopped" -> succeed (IgnoredEvent updateType)
     "StreamStatus" -> streamStatus
+    "PreviewSceneChanged" -> succeed (IgnoredEvent updateType)
     _ -> fail "Not a known event update-type"
   )
 
