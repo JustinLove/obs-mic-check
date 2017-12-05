@@ -31,26 +31,25 @@ view model =
     , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , model.alarm
-      |> violated
+    , violated model.alarm model.activeAudioRule
       |> List.map displayAudioRule
       |> ul [ ]
     , displayScene model.ruleSet model.currentScene
     ]
 
-violated : Alarm -> List AudioRule
-violated alarm =
+violated : Alarm -> AudioRule -> List AudioRule
+violated alarm audioRule =
   case alarm of
-    Active _ -> []
-    Violation audioRule _ -> [ audioRule ]
-    Alarming audioRule _ -> [ audioRule ]
+    Silent -> []
+    Violation _ -> [ audioRule ]
+    Alarming _ -> [ audioRule ]
 
 alarming : Alarm -> Bool
 alarming alarm =
   case alarm of
-    Active _ -> False
-    Violation _ _ -> False
-    Alarming _ _ -> True
+    Silent -> False
+    Violation _ -> False
+    Alarming _ -> True
 
 displayScene : RuleSet -> Scene -> Html ViewMsg
 displayScene (RuleSet default rules) scene =

@@ -5,11 +5,11 @@ module AlarmRule exposing
   , AudioRule(..)
   , AudioState(..)
   , Alarm(..)
-  , checkTimeout
-  , violatingRule
+  , activeRule
   , checkRule
   , matchesVideoSource
   , audioSourceNames
+  , checkAudioRule
   )
 
 import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
@@ -34,31 +34,9 @@ type AudioState
   | AllAudio (List AudioState)
 
 type Alarm
-  = Active AudioRule
-  | Violation AudioRule Int
-  | Alarming AudioRule Int
-
-checkTimeout : Int -> Alarm -> Alarm
-checkTimeout time alarm =
-  case alarm of
-    Active _ -> alarm
-    Violation (AudioRule state timeout) start ->
-      let _ = Debug.log "times" [time, start, timeout] in
-      if time - start > timeout then
-        Alarming (AudioRule state timeout) start
-      else 
-        alarm
-    Alarming _ _ -> alarm
-
-violatingRule : List Source -> RuleSet -> Int -> Alarm
-violatingRule sources ruleSet time =
-  activeRule sources ruleSet
-    |> (\audioRule ->
-      if checkAudioRule sources audioRule then
-        Violation audioRule time
-      else
-        Active audioRule
-      )
+  = Silent
+  | Violation Int
+  | Alarming Int
 
 activeRule : List Source -> RuleSet -> AudioRule
 activeRule sources (RuleSet default rules) =

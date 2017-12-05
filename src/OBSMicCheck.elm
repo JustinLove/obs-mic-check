@@ -39,6 +39,7 @@ type alias Model =
   , currentScene : Scene
   , specialSources : SpecialSources
   , ruleSet : RuleSet
+  , activeAudioRule : AudioRule
   , alarm : Alarm
   }
 
@@ -73,7 +74,9 @@ makeModel =
         (AudioRule (AnyAudio (allMics Live)) 60)
       ]
     )
-    (Active defaultAudio)
+    defaultAudio
+    Silent
+
 
 -- UPDATE
 
@@ -132,7 +135,7 @@ updateEvent event model =
     Event.SceneItemRemoved sceneName sourceName ->
       (model, refreshScene)
     Event.SceneItemVisibilityChanged sceneName sourceName render ->
-      ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
+      ( updateActive {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
       )
     Event.StreamStatus status ->
@@ -141,10 +144,7 @@ updateEvent event model =
         (model, attemptToConnect)
       else
         if status.streaming then
-          ( { model
-            | time = status.totalStreamTime
-            , alarm = AlarmRule.checkTimeout status.totalStreamTime model.alarm
-            }
+          ( checkAlarms { model | time = status.totalStreamTime }
           , model.ruleSet
             |> AlarmRule.audioSourceNames
             |> List.map (Request.getMute >> obsSend)
@@ -205,7 +205,7 @@ setAudio scene sourceName audio =
 updateSources : Model -> Scene -> SpecialSources -> (Model, Cmd Msg)
 updateSources model scene specialSources =
   let scenePlus = addSpecialSources specialSources scene in
-  ( { model
+  ( updateActive { model
     | currentScene = scenePlus
     , specialSources = specialSources
     }
@@ -236,11 +236,45 @@ specialSourceNames sources =
     , sources.mic3
     ]
 
+updateActive : Model -> Model
+updateActive model =
+  let
+    sources = model.currentScene.sources
+    newActive = AlarmRule.activeRule sources model.ruleSet
+  in
+  { model
+  | activeAudioRule = newActive
+  , alarm =
+    if model.activeAudioRule == newActive then
+      model.alarm
+    else
+      if AlarmRule.checkAudioRule sources newActive then
+        Violation model.time
+      else
+        Silent
+  }
+
 checkAlarms : Model -> Model
 checkAlarms model =
+  let
+    sources = model.currentScene.sources
+    violation = AlarmRule.checkAudioRule sources model.activeAudioRule
+  in
   { model | alarm =
-    AlarmRule.violatingRule model.currentScene.sources model.ruleSet model.time
+    case (model.alarm, violation) of
+      (_, False) -> Silent
+      (Silent, True) -> Violation model.time
+      (Alarming start, True) -> Alarming start
+      (Violation start, True) ->
+        checkTimeout start model.time model.activeAudioRule
   }
+
+checkTimeout : Int -> Int -> AudioRule -> Alarm
+checkTimeout start time (AudioRule _ timeout) =
+  if time - start > timeout then
+    Alarming start
+  else
+    Violation start
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =
