@@ -80,39 +80,58 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    OBS (Ok (Response id (Response.GetVersion version))) ->
+    OBS (Ok (Response id response)) ->
+      updateResponse response model
+    OBS (Ok (Event event)) ->
+      updateEvent event model
+    OBS (Err message) ->
+      let _ = Debug.log "decode error" message in
+      (model, Cmd.none)
+    View (SetPassword word) ->
+      ({model | password = word}, attemptToConnect)
+    View Connect ->
+      (model, attemptToConnect)
+
+updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
+updateResponse response model =
+  case response of
+    Response.GetVersion version ->
       ( { model | connected = Connected version.obsWebsocketVersion}
       , obsSend <| Request.getAuthRequired
       )
-    OBS (Ok (Response id (Response.AuthRequired challenge))) ->
+    Response.AuthRequired challenge ->
       ( model
       , obsSend <| Request.authenticate (OBSWebSocket.authenticate model.password challenge.salt challenge.challenge)
       )
-    OBS (Ok (Response id (Response.AuthNotRequired))) ->
+    Response.AuthNotRequired ->
       authenticated model
-    OBS (Ok (Response id (Response.Authenticate))) ->
+    Response.Authenticate ->
       authenticated model
-    OBS (Ok (Response id (Response.CurrentScene scene))) ->
+    Response.CurrentScene scene ->
       updateSources model scene model.specialSources
-    OBS (Ok (Response id (Response.GetMuted sourceName audio))) ->
+    Response.GetMuted sourceName audio ->
       ( checkAlarms {model | currentScene = setAudio model.currentScene sourceName audio}
       , Cmd.none
       )
-    OBS (Ok (Response id (Response.GetSpecialSources sources))) ->
+    Response.GetSpecialSources sources ->
       updateSources model model.currentScene sources
-    OBS (Ok (Event (Event.IgnoredEvent updateType))) ->
+
+updateEvent : EventData -> Model -> (Model, Cmd Msg)
+updateEvent event model =
+  case event of
+    Event.IgnoredEvent updateType ->
       (model, Cmd.none)
-    OBS (Ok (Event (Event.SwitchScenes scene))) ->
+    Event.SwitchScenes scene ->
       updateSources model scene model.specialSources
-    OBS (Ok (Event (Event.SceneItemAdded sceneName sourceName))) ->
+    Event.SceneItemAdded sceneName sourceName ->
       (model, refreshScene)
-    OBS (Ok (Event (Event.SceneItemRemoved sceneName sourceName))) ->
+    Event.SceneItemRemoved sceneName sourceName ->
       (model, refreshScene)
-    OBS (Ok (Event (Event.SceneItemVisibilityChanged sceneName sourceName render))) ->
+    Event.SceneItemVisibilityChanged sceneName sourceName render ->
       ( checkAlarms {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
       )
-    OBS (Ok (Event (Event.StreamStatus status))) ->
+    Event.StreamStatus status ->
       let _ = Debug.log "status" status in
       if model.connected == NotConnected then
         (model, attemptToConnect)
@@ -126,13 +145,6 @@ update msg model =
           )
         else
           (model, Cmd.none)
-    OBS (Err message) ->
-      let _ = Debug.log "decode error" message in
-      (model, Cmd.none)
-    View (SetPassword word) ->
-      ({model | password = word}, attemptToConnect)
-    View Connect ->
-      (model, attemptToConnect)
 
 attemptToConnect : Cmd Msg
 attemptToConnect =
