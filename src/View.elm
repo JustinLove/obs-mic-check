@@ -237,10 +237,12 @@ displayVideoRule : Int -> VideoState -> Html ViewMsg
 displayVideoRule index videoState =
   case videoState of 
     VideoState sourceName render ->
-      td [ onClick (SetMode (SelectVideo index))]
+      td []
         [ renderStatus render
         , text " "
-        , text sourceName
+        , a
+          [ href "#", onClick (SetMode (SelectVideo index)) ]
+          [ text sourceName ]
         ]
 
 displayAudioRule : AudioRule -> List (Html ViewMsg)
