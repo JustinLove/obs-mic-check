@@ -1,7 +1,7 @@
 module View exposing (view, ViewMsg(..), AppMode(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), matchesVideoSource)
+import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), matchesVideoSource, checkRule, checkAudioRule)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -23,6 +23,7 @@ css = """
 .audio.muted { color: white; background-color: red; }
 .hidden { opacity: 0.5; }
 .alarms { background-color: #FBB; }
+.active { background-color: #FFB; }
 #status { display: none; }
 #config { display: none; }
 .mode-status #status { display: block; }
@@ -60,7 +61,7 @@ displayHeader model =
 displayStatus model =
   div [ id "status" ]
     [ ul [] <| violated model.time model.alarm model.activeAudioRule
-    , displayRuleSet model.ruleSet
+    , displayRuleSet model.currentScene.sources model.ruleSet
     ]
 
 displayConfig model =
@@ -89,12 +90,15 @@ violated time alarm audioRule =
       , text <| toString (time - start)
       ]
 
-displayRuleSet : RuleSet -> Html ViewMsg
-displayRuleSet (RuleSet default rules) =
+displayRuleSet : List Source -> RuleSet -> Html ViewMsg
+displayRuleSet sources (RuleSet default rules) =
   div []
     [ rules
-      |> List.map displayRule
-      |> (flip List.append) [li [] [ text "default ", displayAudioRule default ]]
+      |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
+      |> (flip List.append)
+        [ li [ classList [ ("active", checkAudioRule sources default) ] ]
+          [ text "default ", displayAudioRule default ]
+        ]
       |> ol [ class "rule" ]
     ]
 
@@ -132,7 +136,7 @@ displaySource rules source =
       ]
     , rules
         |> List.filter (matchesVideoSource source)
-        |> List.map displayRule
+        |> List.map (displayRule False)
         |> ul [ class "rule" ]
     ]
 
@@ -148,9 +152,9 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
-displayRule : AlarmRule -> Html ViewMsg
-displayRule (AlarmRule video audio) =
-  li []
+displayRule : Bool -> AlarmRule -> Html ViewMsg
+displayRule active (AlarmRule video audio) =
+  li [ classList [ ("active", active) ] ]
     [ (displayVideoRule video)
     , text " "
     , (displayAudioRule audio)
