@@ -182,7 +182,7 @@ displayVideoRule videoState =
 
 displayAudioRule : AudioRule -> List (Html ViewMsg)
 displayAudioRule (AudioRule audioState timeout) =
-  [ displayAudioState audioState
+  [ td [] [ displayAudioState audioState ]
   , td []
     [ text <| toString timeout
     , text " seconds"
@@ -193,24 +193,21 @@ displayAudioState : AudioState -> Html ViewMsg
 displayAudioState audioState =
   case audioState of 
     AudioState sourceName audio ->
-      td []
+      div []
         [ text sourceName
         , text " "
         , audioStatus audio
         ]
     AnyAudio states ->
-      td [] <| List.concat
-        [ [ text "any[" ]
-        , List.intersperse (text ", ") <| List.map displayAudioState states
-        , [ text "]" ]
+      div []
+        [ text "any"
+        , ul [] <| List.map (\e -> li [] [e]) <| List.map displayAudioState states
         ]
     AllAudio states ->
-      td [] <| List.concat
-        [ [ text "all[" ]
-        , List.intersperse (text ", ") <| List.map displayAudioState states
-        , [ text "]" ]
+      div []
+        [ text "all"
+        , ul [] <| List.map (\e -> li [] [e]) <| List.map displayAudioState states
         ]
-
 
 modeControl : AppMode -> AppMode -> Html ViewMsg
 modeControl current mode =
