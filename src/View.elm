@@ -9,13 +9,15 @@ import Html.Events exposing (onClick, on, onCheck)
 import Json.Decode
 
 type ViewMsg
-  = Connect
+  = None
+  | Connect
   | SetPassword String
   | SetMode AppMode
 
 type AppMode
   = Status
   | Config
+  | SelectVideo Int
 
 -- VIEW
 
@@ -66,6 +68,7 @@ displayHeader model =
     , case model.appMode of
         Status -> modeControl model.appMode Config
         Config -> modeControl model.appMode Status
+        SelectVideo _ -> modeControl model.appMode Status
     ]
 
 displayStatus model =
@@ -110,7 +113,7 @@ displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources (RuleSet default rules) =
   div []
     [ rules
-      |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
+      |> List.indexedMap (\index rule -> (displayRule (checkRule sources rule) index rule))
       |> (flip List.append)
         [ displayDefaultRule (checkAudioRule sources default) default ]
       |> List.append
@@ -155,7 +158,7 @@ displaySource rules source =
       ]
     , rules
         |> List.filter (matchesVideoSource source)
-        |> List.map (displayRule False)
+        |> List.indexedMap (displayRule False)
         |> table [ class "rules" ]
     ]
 
@@ -171,11 +174,11 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
-displayRule : Bool -> AlarmRule -> Html ViewMsg
-displayRule active (AlarmRule video audio) =
+displayRule : Bool -> Int -> AlarmRule -> Html ViewMsg
+displayRule active index (AlarmRule video audio) =
   tr [ classList [ ("active", active) ] ]
     <| List.append
-      [ (displayVideoRule video) ]
+      [ (displayVideoRule index video) ]
       (displayAudioRule audio)
 
 displayDefaultRule : Bool -> AudioRule -> Html ViewMsg
@@ -185,11 +188,11 @@ displayDefaultRule active audioRule =
       [ td [] [ text "default " ] ]
       (displayAudioRule audioRule)
 
-displayVideoRule : VideoState -> Html ViewMsg
-displayVideoRule videoState =
+displayVideoRule : Int -> VideoState -> Html ViewMsg
+displayVideoRule index videoState =
   case videoState of 
     VideoState sourceName render ->
-      td []
+      td [ onClick (SetMode (SelectVideo index))]
         [ renderStatus render
         , text " "
         , text sourceName
@@ -232,7 +235,7 @@ modeControl current mode =
       , id "app-mode"
       , value "config"
       , onCheck (\_ -> SetMode mode)
-      , checked (current == Config)
+      , checked (current /= Status)
       ] []
     , label [ for "app-mode" ] [text "Config" ]
     ]

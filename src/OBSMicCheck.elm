@@ -95,6 +95,8 @@ update msg model =
     OBS (Err message) ->
       let _ = Debug.log "decode error" message in
       (model, Cmd.none)
+    View (None) ->
+      (model, Cmd.none)
     View (SetPassword word) ->
       ({model | password = word}, attemptToConnect)
     View Connect ->
