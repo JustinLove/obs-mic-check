@@ -60,6 +60,7 @@ displayHeader model =
 displayStatus model =
   div [ id "status" ]
     [ ul [] <| violated model.time model.alarm model.activeAudioRule
+    , displayRuleSet model.ruleSet
     ]
 
 displayConfig model =
@@ -87,6 +88,15 @@ violated time alarm audioRule =
       , text " "
       , text <| toString (time - start)
       ]
+
+displayRuleSet : RuleSet -> Html ViewMsg
+displayRuleSet (RuleSet default rules) =
+  div []
+    [ rules
+      |> List.map displayRule
+      |> (flip List.append) [li [] [ text "default ", displayAudioRule default ]]
+      |> ol [ class "rule" ]
+    ]
 
 alarming : Alarm -> Bool
 alarming alarm =
