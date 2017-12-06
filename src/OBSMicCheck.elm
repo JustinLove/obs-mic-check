@@ -1,6 +1,6 @@
 module OBSMicCheck exposing (..)
 
-import View exposing (view, ViewMsg(..))
+import View exposing (view, ViewMsg(..), AppMode(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
@@ -41,6 +41,7 @@ type alias Model =
   , ruleSet : RuleSet
   , activeAudioRule : AudioRule
   , alarm : Alarm
+  , appMode : AppMode
   }
 
 init : (Model, Cmd Msg)
@@ -76,7 +77,7 @@ makeModel =
     )
     defaultAudio
     Silent
-
+    Status
 
 -- UPDATE
 
@@ -98,6 +99,8 @@ update msg model =
       ({model | password = word}, attemptToConnect)
     View Connect ->
       (model, attemptToConnect)
+    View (SetMode mode) ->
+      ({model | appMode = mode}, Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =

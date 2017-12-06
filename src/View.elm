@@ -1,16 +1,21 @@
-module View exposing (view, ViewMsg(..))
+module View exposing (view, ViewMsg(..), AppMode(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
 import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), matchesVideoSource)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick, on)
+import Html.Events exposing (onClick, on, onCheck)
 import Json.Decode
 
 type ViewMsg
   = Connect
   | SetPassword String
+  | SetMode AppMode
+
+type AppMode
+  = Status
+  | Config
 
 -- VIEW
 
@@ -18,6 +23,10 @@ css = """
 .audio.muted { color: white; background-color: red; }
 .hidden { opacity: 0.5; }
 .alarms { background-color: #FBB; }
+#status { display: none; }
+#config { display: none; }
+.mode-status #status { display: block; }
+.mode-config #config { display: block; }
 """
 
 -- view : Model -> Html ViewMsg
@@ -25,6 +34,8 @@ view model =
   div
     [ classList
       [ ("alarms", alarming model.alarm)
+      , ("mode-status", model.appMode == Status)
+      , ("mode-config", model.appMode == Config)
       ]
     ]
     [ node "style" [] [ text css ]
@@ -41,6 +52,9 @@ displayHeader model =
       ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
+    , case model.appMode of
+        Status -> modeControl model.appMode Config
+        Config -> modeControl model.appMode Status
     ]
 
 displayStatus model =
@@ -172,3 +186,18 @@ displayAudioState audioState =
         , List.intersperse (text ", ") <| List.map displayAudioState states
         , [ text "]" ]
         ]
+
+
+modeControl : AppMode -> AppMode -> Html ViewMsg
+modeControl current mode =
+  span []
+    [ input
+      [ type_ "checkbox"
+      , Html.Attributes.name "Config"
+      , id "app-mode"
+      , value "config"
+      , onCheck (\_ -> SetMode mode)
+      , checked (current == Config)
+      ] []
+    , label [ for "app-mode" ] [text "Config" ]
+    ]
