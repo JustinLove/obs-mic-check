@@ -104,13 +104,13 @@ update msg model =
     View (SetMode mode) ->
       ({model | appMode = mode}, Cmd.none)
     View (SetVideoSource index source) ->
-      ( { model
+      ( updateActive { model
         | ruleSet = updateRule index (updateVideoSourceName source) model.ruleSet
         , appMode = Status
         }
       , Cmd.none)
     View (SetVideoRender index render) ->
-      ( { model
+      ( updateActive { model
         | ruleSet = updateRule index (updateVideoRender render) model.ruleSet
         }
       , Cmd.none)
@@ -195,7 +195,6 @@ authenticatedStatus connected =
       Authenticated version 
     Authenticated version->
       Authenticated version 
-
 setRender : Scene -> String -> Render -> Scene
 setRender scene sourceName render =
   { scene | sources =
