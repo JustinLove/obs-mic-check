@@ -31,18 +31,25 @@ view model =
     , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , violated model.alarm model.activeAudioRule
-      |> List.map displayAudioRule
-      |> ul [ ]
+    , ul [] <| violated model.time model.alarm model.activeAudioRule
     , displayScene model.ruleSet model.currentScene
     ]
 
-violated : Alarm -> AudioRule -> List AudioRule
-violated alarm audioRule =
+violated : Int -> Alarm -> AudioRule -> List (Html ViewMsg)
+violated time alarm audioRule =
+  let (AudioRule _ timeout) = audioRule in
   case alarm of
     Silent -> []
-    Violation _ -> [ audioRule ]
-    Alarming _ -> [ audioRule ]
+    Violation start ->
+      [ displayAudioRule audioRule
+      , text " "
+      , text <| toString (timeout - (time - start))
+      ]
+    Alarming start ->
+      [ displayAudioRule audioRule
+      , text " "
+      , text <| toString (time - start)
+      ]
 
 alarming : Alarm -> Bool
 alarming alarm =
@@ -114,7 +121,12 @@ displayVideoRule videoState =
 
 displayAudioRule : AudioRule -> Html ViewMsg
 displayAudioRule (AudioRule audioState timeout) =
-  displayAudioState audioState
+  span []
+    [ displayAudioState audioState
+    , text " > "
+    , text <| toString timeout
+    , text " seconds"
+    ]
 
 displayAudioState : AudioState -> Html ViewMsg
 displayAudioState audioState =
