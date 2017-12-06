@@ -30,6 +30,7 @@ css = """
 #config { display: none; }
 .mode-status #status { display: block; }
 .mode-config #config { display: block; }
+
 .rules { border: solid #aaa 1px; border-collapse: collapse;}
 .rules td, .rules th {
   border-top: solid #aaa 1px;
@@ -40,6 +41,25 @@ css = """
   padding-right: 1em;
 }
 .rules ul { margin: 0; }
+
+.source-list { border: solid #aaa 1px; border-collapse: collapse;}
+.source-list td, .source-list th {
+  border-top: solid #aaa 1px;
+  border-bottom: solid #aaa 1px;
+  border-left: dashed #eee 1px;
+  border-right: dashed #eee 1px;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+.source-list .icon {
+  border-left: none;
+  border-right: none;
+  padding: 0.2em;
+}
+.source-list .icon + td {
+  border-left: none;
+  padding-left: 0.2em;
+}
 """
 
 -- view : Model -> Html ViewMsg
@@ -53,8 +73,10 @@ view model =
     ]
     [ node "style" [] [ text css ]
     , displayHeader model
-    , displayStatus model
-    , displayConfig model
+    , case model.appMode of
+        Status -> displayStatus model
+        Config -> displayConfig model
+        SelectVideo index -> displaySelectVideo model index
     ]
 
 displayHeader model =
@@ -80,6 +102,14 @@ displayStatus model =
 displayConfig model =
   div [ id "config" ]
     [ displayScene model.ruleSet model.currentScene
+    ]
+
+displaySelectVideo model index =
+  let scene = model.currentScene in
+  div [ id "select-video" ]
+    [ h2 [] [ text scene.name ]
+    , table [ class "source-list" ]
+      <| List.map displaySourceForSelect scene.sources
     ]
 
 targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
@@ -140,7 +170,7 @@ displayScene (RuleSet default rules) scene =
 
 displaySource : List AlarmRule -> Source -> Html ViewMsg
 displaySource rules source =
-  ul
+  li
     [ classList 
       [ ("hidden", source.render == Hidden)
       , ("visible", source.render == Visible)
@@ -160,6 +190,21 @@ displaySource rules source =
         |> List.filter (matchesVideoSource source)
         |> List.indexedMap (displayRule False)
         |> table [ class "rules" ]
+    ]
+
+displaySourceForSelect : Source -> Html ViewMsg
+displaySourceForSelect source =
+  tr
+    [ classList 
+      [ ("hidden", source.render == Hidden)
+      , ("visible", source.render == Visible)
+      , ("source", True)
+      ]
+    ]
+    [ td [ class "icon" ] [ renderStatus source.render ]
+    , td [ class "icon" ] [ audioStatus source.audio ]
+    , td [] [ text source.name ]
+    , td [] [ em [] [ text source.type_ ] ]
     ]
 
 renderStatus : Render -> Html ViewMsg
