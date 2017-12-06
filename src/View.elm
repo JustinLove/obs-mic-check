@@ -102,10 +102,8 @@ displayRuleSet sources (RuleSet default rules) =
     [ rules
       |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
       |> (flip List.append)
-        [ li [ classList [ ("active", checkAudioRule sources default) ] ]
-          [ text "default ", displayAudioRule default ]
-        ]
-      |> ol [ class "rule" ]
+        [ displayDefaultRule (checkAudioRule sources default) default ]
+      |> table [ class "rules" ]
     ]
 
 alarming : Alarm -> Bool
@@ -143,7 +141,7 @@ displaySource rules source =
     , rules
         |> List.filter (matchesVideoSource source)
         |> List.map (displayRule False)
-        |> ul [ class "rule" ]
+        |> table [ class "rules" ]
     ]
 
 renderStatus : Render -> Html ViewMsg
@@ -160,48 +158,54 @@ audioStatus audio =
 
 displayRule : Bool -> AlarmRule -> Html ViewMsg
 displayRule active (AlarmRule video audio) =
-  li [ classList [ ("active", active) ] ]
-    [ (displayVideoRule video)
-    , text " "
-    , (displayAudioRule audio)
-    ]
+  tr [ classList [ ("active", active) ] ]
+    <| List.append
+      [ (displayVideoRule video) ]
+      (displayAudioRule audio)
+
+displayDefaultRule : Bool -> AudioRule -> Html ViewMsg
+displayDefaultRule active audioRule =
+  tr [ classList [ ("active", active) ] ]
+    <| List.append
+      [ td [] [ text "default " ] ]
+      (displayAudioRule audioRule)
 
 displayVideoRule : VideoState -> Html ViewMsg
 displayVideoRule videoState =
   case videoState of 
     VideoState sourceName render ->
-      span []
+      td []
         [ renderStatus render
         , text " "
         , text sourceName
         ]
 
-displayAudioRule : AudioRule -> Html ViewMsg
+displayAudioRule : AudioRule -> List (Html ViewMsg)
 displayAudioRule (AudioRule audioState timeout) =
-  span []
-    [ displayAudioState audioState
-    , text " > "
-    , text <| toString timeout
+  [ displayAudioState audioState
+  , td []
+    [ text <| toString timeout
     , text " seconds"
     ]
+  ]
 
 displayAudioState : AudioState -> Html ViewMsg
 displayAudioState audioState =
   case audioState of 
     AudioState sourceName audio ->
-      span []
+      td []
         [ text sourceName
         , text " "
         , audioStatus audio
         ]
     AnyAudio states ->
-      span [] <| List.concat
+      td [] <| List.concat
         [ [ text "any[" ]
         , List.intersperse (text ", ") <| List.map displayAudioState states
         , [ text "]" ]
         ]
     AllAudio states ->
-      span [] <| List.concat
+      td [] <| List.concat
         [ [ text "all[" ]
         , List.intersperse (text ", ") <| List.map displayAudioState states
         , [ text "]" ]
