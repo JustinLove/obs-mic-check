@@ -14,6 +14,7 @@ type ViewMsg
   | SetPassword String
   | SetMode AppMode
   | SetVideoSource Int String
+  | SetVideoRender Int Render
 
 type AppMode
   = Status
@@ -209,6 +210,12 @@ displaySourceForSelect index source =
     , td [] [ em [] [ text source.type_ ] ]
     ]
 
+toggleRender : Render -> Render
+toggleRender render =
+  case render of
+    Visible -> Hidden
+    Hidden -> Visible
+
 renderStatus : Render -> Html ViewMsg
 renderStatus render =
   case render of
@@ -240,7 +247,8 @@ displayVideoRule index videoState =
   case videoState of 
     VideoState sourceName render ->
       td []
-        [ renderStatus render
+        [ a [ href "#", onClick (SetVideoRender index (toggleRender render)) ]
+          [ renderStatus render ]
         , text " "
         , a
           [ href "#", onClick (SetMode (SelectVideo index)) ]

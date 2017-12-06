@@ -109,6 +109,11 @@ update msg model =
         , appMode = Status
         }
       , Cmd.none)
+    View (SetVideoRender index render) ->
+      ( { model
+        | ruleSet = updateRule index (updateVideoRender render) model.ruleSet
+        }
+      , Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
@@ -294,6 +299,10 @@ updateRule index f (RuleSet default rules) =
 updateVideoSourceName : String -> AlarmRule -> AlarmRule
 updateVideoSourceName newName (AlarmRule (VideoState _ render) audioRule) =
   AlarmRule (VideoState newName render) audioRule
+
+updateVideoRender : Render -> AlarmRule -> AlarmRule
+updateVideoRender newRender (AlarmRule (VideoState sourceName _) audioRule) =
+  AlarmRule (VideoState sourceName newRender) audioRule
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =
