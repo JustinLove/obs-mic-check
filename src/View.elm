@@ -13,6 +13,7 @@ type ViewMsg
   | Connect
   | SetPassword String
   | SetMode AppMode
+  | SetVideoSource Int String
 
 type AppMode
   = Status
@@ -109,7 +110,7 @@ displaySelectVideo model index =
   div [ id "select-video" ]
     [ h2 [] [ text scene.name ]
     , table [ class "source-list" ]
-      <| List.map displaySourceForSelect scene.sources
+      <| List.map (displaySourceForSelect index) scene.sources
     ]
 
 targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
@@ -192,14 +193,15 @@ displaySource rules source =
         |> table [ class "rules" ]
     ]
 
-displaySourceForSelect : Source -> Html ViewMsg
-displaySourceForSelect source =
+displaySourceForSelect : Int -> Source -> Html ViewMsg
+displaySourceForSelect index source =
   tr
     [ classList 
       [ ("hidden", source.render == Hidden)
       , ("visible", source.render == Visible)
       , ("source", True)
       ]
+    , onClick (SetVideoSource index source.name)
     ]
     [ td [ class "icon" ] [ renderStatus source.render ]
     , td [ class "icon" ] [ audioStatus source.audio ]

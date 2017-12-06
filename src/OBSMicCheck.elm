@@ -103,6 +103,12 @@ update msg model =
       (model, attemptToConnect)
     View (SetMode mode) ->
       ({model | appMode = mode}, Cmd.none)
+    View (SetVideoSource index source) ->
+      ( { model
+        | ruleSet = updateRule index (updateVideoSourceName source) model.ruleSet
+        , appMode = Status
+        }
+      , Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
@@ -280,6 +286,14 @@ checkTimeout start time (AudioRule _ timeout) =
     Alarming start
   else
     Violation start
+
+updateRule : Int -> (AlarmRule -> AlarmRule) -> RuleSet -> RuleSet
+updateRule index f (RuleSet default rules) =
+  RuleSet default (List.indexedMap (\i x -> if i == index then f x else x) rules)
+
+updateVideoSourceName : String -> AlarmRule -> AlarmRule
+updateVideoSourceName newName (AlarmRule (VideoState _ render) audioRule) =
+  AlarmRule (VideoState newName render) audioRule
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =
