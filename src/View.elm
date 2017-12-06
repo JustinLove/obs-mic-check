@@ -60,7 +60,7 @@ displayHeader model =
 
 displayStatus model =
   div [ id "status" ]
-    [ ul [] <| violated model.time model.alarm model.activeAudioRule
+    [ violated model.time model.alarm model.activeAudioRule
     , displayRuleSet model.currentScene.sources model.ruleSet
     ]
 
@@ -74,21 +74,27 @@ targetValue tagger =
   Json.Decode.map tagger
     (Json.Decode.at ["target", "value" ] Json.Decode.string)
 
-violated : Int -> Alarm -> AudioRule -> List (Html ViewMsg)
+violated : Int -> Alarm -> AudioRule -> Html ViewMsg
 violated time alarm audioRule =
   let (AudioRule _ timeout) = audioRule in
   case alarm of
-    Silent -> []
+    Silent ->
+      alarmTime timeout 0
     Violation start ->
-      [ displayAudioRule audioRule
-      , text " "
-      , text <| toString (timeout - (time - start))
-      ]
+      alarmTime timeout (time - start)
     Alarming start ->
-      [ displayAudioRule audioRule
-      , text " "
-      , text <| toString (time - start)
-      ]
+      alarmTime timeout (time - start)
+
+alarmTime : Int -> Int -> Html ViewMsg
+alarmTime max val =
+  span []
+    [ progress
+      [ Html.Attributes.max <| toString max
+      , value <| toString val
+      ] []
+    , text " "
+    , text <| toString val
+    ]
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources (RuleSet default rules) =
