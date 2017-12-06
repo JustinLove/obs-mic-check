@@ -28,6 +28,16 @@ css = """
 #config { display: none; }
 .mode-status #status { display: block; }
 .mode-config #config { display: block; }
+.rules { border: solid #aaa 1px; border-collapse: collapse;}
+.rules td, .rules th {
+  border-top: solid #aaa 1px;
+  border-bottom: solid #aaa 1px;
+  border-left: dashed #eee 1px;
+  border-right: dashed #eee 1px;
+  padding-left: 1em;
+  padding-right: 1em;
+}
+.rules ul { margin: 0; }
 """
 
 -- view : Model -> Html ViewMsg
@@ -103,6 +113,11 @@ displayRuleSet sources (RuleSet default rules) =
       |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
       |> (flip List.append)
         [ displayDefaultRule (checkAudioRule sources default) default ]
+      |> List.append
+        [ th [] [ text "Video Source" ]
+        , th [] [ text "Audio Status" ]
+        , th [] [ text "Seconds" ]
+        ]
       |> table [ class "rules" ]
     ]
 
@@ -185,7 +200,6 @@ displayAudioRule (AudioRule audioState timeout) =
   [ td [] [ displayAudioState audioState ]
   , td []
     [ text <| toString timeout
-    , text " seconds"
     ]
   ]
 
