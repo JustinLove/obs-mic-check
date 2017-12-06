@@ -28,12 +28,35 @@ view model =
       ]
     ]
     [ node "style" [] [ text css ]
-    , input [ type_ "password", on "change" (Json.Decode.map SetPassword (Json.Decode.at ["target", "value"] Json.Decode.string)) ] []
+    , displayHeader model
+    , displayStatus model
+    , displayConfig model
+    ]
+
+displayHeader model =
+  header []
+    [ input
+      [ type_ "password"
+      , on "change" <| targetValue SetPassword
+      ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , ul [] <| violated model.time model.alarm model.activeAudioRule
-    , displayScene model.ruleSet model.currentScene
     ]
+
+displayStatus model =
+  div [ id "status" ]
+    [ ul [] <| violated model.time model.alarm model.activeAudioRule
+    ]
+
+displayConfig model =
+  div [ id "config" ]
+    [ displayScene model.ruleSet model.currentScene
+    ]
+
+targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
+targetValue tagger =
+  Json.Decode.map tagger
+    (Json.Decode.at ["target", "value" ] Json.Decode.string)
 
 violated : Int -> Alarm -> AudioRule -> List (Html ViewMsg)
 violated time alarm audioRule =
