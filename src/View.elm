@@ -1,7 +1,7 @@
 module View exposing (view, ViewMsg(..), AppMode(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), matchesVideoSource, checkRule, checkAudioRule)
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -13,14 +13,14 @@ type ViewMsg
   | Connect
   | SetPassword String
   | SelectConfig
-  | SelectRuleVideoName Int
-  | SelectVideoRender Int
+  | SelectRuleVideoName VideoState
+  | SelectVideoRender VideoState
   | SelectVideoSource String
 
 type AppMode
   = Status
   | Config
-  | SelectVideo Int
+  | SelectVideo VideoState
 
 -- VIEW
 
@@ -143,7 +143,7 @@ displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources (RuleSet default rules) =
   div []
     [ rules
-      |> List.indexedMap (\index rule -> (displayRule (checkRule sources rule) index rule))
+      |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
       |> (flip List.append)
         [ displayDefaultRule (checkAudioRule sources default) default ]
       |> List.append
@@ -154,6 +154,10 @@ displayRuleSet sources (RuleSet default rules) =
       |> table [ class "rules" ]
     ]
 
+checkRule : List Source -> (VideoState, AudioRule) -> Bool
+checkRule sources (video, audio) =
+  (checkVideoState sources video) && (checkAudioRule sources audio)
+
 alarming : Alarm -> Bool
 alarming alarm =
   case alarm of
@@ -162,14 +166,14 @@ alarming alarm =
     Alarming _ -> True
 
 displayScene : RuleSet -> Scene -> Html ViewMsg
-displayScene (RuleSet default rules) scene =
+displayScene ruleSet scene =
   div []
     [ h2 [] [ text scene.name ]
-    , ul [] <| List.map (displaySource rules) scene.sources
+    , ul [] <| List.map (displaySource ruleSet) scene.sources
     ]
 
-displaySource : List AlarmRule -> Source -> Html ViewMsg
-displaySource rules source =
+displaySource : RuleSet -> Source -> Html ViewMsg
+displaySource ruleSet source =
   li
     [ classList 
       [ ("hidden", source.render == Hidden)
@@ -186,10 +190,11 @@ displaySource rules source =
       , text " "
       , em [] [ text source.type_ ]
       ]
-    , rules
-        |> List.filter (matchesVideoSource source)
-        |> List.indexedMap (displayRule False)
-        |> table [ class "rules" ]
+    , ruleSet
+      |> RuleSet.toList
+      |> List.filter (\((VideoState name _), _) -> name == source.name)
+      |> List.map (displayRule False)
+      |> table [ class "rules" ]
     ]
 
 displaySourceForSelect : Source -> Html ViewMsg
@@ -220,11 +225,11 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
-displayRule : Bool -> Int -> AlarmRule -> Html ViewMsg
-displayRule active index (AlarmRule video audio) =
+displayRule : Bool -> (VideoState, AudioRule) -> Html ViewMsg
+displayRule active (video, audio) =
   tr [ classList [ ("active", active) ] ]
     <| List.append
-      [ (displayVideoRule index video) ]
+      [ (displayVideoRule video) ]
       (displayAudioRule audio)
 
 displayDefaultRule : Bool -> AudioRule -> Html ViewMsg
@@ -234,16 +239,16 @@ displayDefaultRule active audioRule =
       [ td [] [ text "default " ] ]
       (displayAudioRule audioRule)
 
-displayVideoRule : Int -> VideoState -> Html ViewMsg
-displayVideoRule index videoState =
+displayVideoRule : VideoState -> Html ViewMsg
+displayVideoRule videoState =
   case videoState of 
     VideoState sourceName render ->
       td []
-        [ a [ href "#", onClick (SelectVideoRender index) ]
+        [ a [ href "#", onClick (SelectVideoRender videoState) ]
           [ renderStatus render ]
         , text " "
         , a
-          [ href "#", onClick (SelectRuleVideoName index) ]
+          [ href "#", onClick (SelectRuleVideoName videoState) ]
           [ text sourceName ]
         ]
 

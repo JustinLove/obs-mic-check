@@ -7,7 +7,7 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..))
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..))
 
 import Html
 import WebSocket
@@ -63,17 +63,16 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    ( RuleSet defaultAudio
-      [ AlarmRule
+    ( RuleSet.empty defaultAudio
+      |> RuleSet.insert 
         (VideoState "BRB - text 2" Visible) 
         (AudioRule (AnyAudio (allMics Live)) 5)
-      , AlarmRule
+      |> RuleSet.insert 
         (VideoState "Starting soon - text" Visible) 
         (AudioRule (AnyAudio (allMics Live)) 5)
-      , AlarmRule
+      |> RuleSet.insert 
         (VideoState "Stream over - text" Visible) 
         (AudioRule (AnyAudio (allMics Live)) 60)
-      ]
     )
     defaultAudio
     Silent
@@ -109,18 +108,20 @@ update msg model =
         }
       , Cmd.none
       )
-    View (SelectRuleVideoName index) ->
-      ({model | appMode = SelectVideo index}, Cmd.none)
-    View (SelectVideoRender index) ->
+    View (SelectVideoRender videoState) ->
+      let (VideoState name render) = videoState in
       ( updateActive { model
-        | ruleSet = updateRule index toggleVideoRender model.ruleSet
+        | ruleSet = mapRuleKey videoState (VideoState name (toggleRender render)) model.ruleSet
         }
       , Cmd.none)
+    View (SelectRuleVideoName videoState) ->
+      ({model | appMode = SelectVideo videoState}, Cmd.none)
     View (SelectVideoSource source) ->
       case model.appMode of
-        SelectVideo index ->
+        SelectVideo videoState ->
+          let (VideoState _ render) = videoState in
           ( updateActive { model
-            | ruleSet = updateRule index (updateVideoSourceName source) model.ruleSet
+            | ruleSet = mapRuleKey videoState (VideoState source render) model.ruleSet
             , appMode = Status
             }
           , Cmd.none)
@@ -173,7 +174,7 @@ updateEvent event model =
         if status.streaming then
           ( checkAlarms { model | time = status.totalStreamTime }
           , model.ruleSet
-            |> AlarmRule.audioSourceNames
+            |> RuleSet.audioSourceNames
             |> List.map (Request.getMute >> obsSend)
             |> Cmd.batch
           )
@@ -266,7 +267,7 @@ updateActive : Model -> Model
 updateActive model =
   let
     sources = model.currentScene.sources
-    newActive = AlarmRule.activeRule sources model.ruleSet
+    newActive = RuleSet.activeAudioRule sources model.ruleSet
   in
   { model
   | activeAudioRule = newActive
@@ -274,7 +275,7 @@ updateActive model =
     if model.activeAudioRule == newActive then
       model.alarm
     else
-      if AlarmRule.checkAudioRule sources newActive then
+      if RuleSet.checkAudioRule sources newActive then
         Violation model.time
       else
         Silent
@@ -284,7 +285,7 @@ checkAlarms : Model -> Model
 checkAlarms model =
   let
     sources = model.currentScene.sources
-    violation = AlarmRule.checkAudioRule sources model.activeAudioRule
+    violation = RuleSet.checkAudioRule sources model.activeAudioRule
   in
   { model | alarm =
     case (model.alarm, violation) of
@@ -302,17 +303,14 @@ checkTimeout start time (AudioRule _ timeout) =
   else
     Violation start
 
-updateRule : Int -> (AlarmRule -> AlarmRule) -> RuleSet -> RuleSet
-updateRule index f (RuleSet default rules) =
-  RuleSet default (List.indexedMap (\i x -> if i == index then f x else x) rules)
-
-updateVideoSourceName : String -> AlarmRule -> AlarmRule
-updateVideoSourceName newName (AlarmRule (VideoState _ render) audioRule) =
-  AlarmRule (VideoState newName render) audioRule
-
-toggleVideoRender : AlarmRule -> AlarmRule
-toggleVideoRender (AlarmRule (VideoState sourceName render) audioRule) =
-  AlarmRule (VideoState sourceName (toggleRender render)) audioRule
+mapRuleKey : VideoState -> VideoState -> RuleSet -> RuleSet
+mapRuleKey key replacement ruleSet =
+  case RuleSet.get key ruleSet of
+    Just audio ->
+      ruleSet
+        |> RuleSet.remove key
+        |> RuleSet.insert replacement audio
+    Nothing -> ruleSet
 
 toggleRender : Render -> Render
 toggleRender render =

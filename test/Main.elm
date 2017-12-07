@@ -1,4 +1,4 @@
-import AlarmRule exposing (RuleSet(..), AlarmRule(..), VideoState(..), AudioRule(..), AudioState(..), activeRule, checkRule, checkAudioRule)
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), activeAudioRule, checkAudioRule)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 
 import Expectation exposing (eql, isTrue, isFalse)
@@ -13,17 +13,7 @@ main =
 
 all : Test
 all = describe "rules"
-  [ describe "single rules"
-    [ it "visible source, live audio" <|
-      isTrue <| checkRule [ brb Visible, podcaster Live ] brbLive
-    , it "visible source, muted audio" <|
-      isFalse <| checkRule [ brb Visible, podcaster Muted ] brbLive
-    , it "hidden source, live audio" <|
-      isFalse <| checkRule [ brb Hidden, podcaster Live ] brbLive
-    , it "hidden source, muted audio" <|
-      isFalse <| checkRule [ brb Hidden, podcaster Muted ] brbLive
-    ]
-  , describe "multiple rules"
+  [ describe "multiple rules"
     [ it "visible source, live audio" <|
       isTrue <| alarmRaised [ brb Visible, podcaster Live ] basicRules
     , it "visible source, muted audio" <|
@@ -72,11 +62,11 @@ allMics audio =
   , (AudioState "Podcaster - Stepmania" audio)
   ]
 
-brbLive = AlarmRule
+brbLive = (,)
   (VideoState "BRB - text 2" Visible) 
   (AudioRule (AnyAudio (allMics Live)) 0)
 
-startingLive = AlarmRule
+startingLive = (,)
   (VideoState "Starting soon - text" Visible) 
   (AudioRule (AnyAudio (allMics Live)) 0)
 
@@ -105,5 +95,5 @@ mic name audio =
   }
 
 alarmRaised sources ruleSet =
-  activeRule sources ruleSet
+  activeAudioRule sources ruleSet
     |> (\audioRule -> checkAudioRule sources audioRule)
