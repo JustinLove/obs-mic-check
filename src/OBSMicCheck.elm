@@ -101,8 +101,16 @@ update msg model =
       ({model | password = word}, attemptToConnect)
     View Connect ->
       (model, attemptToConnect)
-    View (SetMode mode) ->
-      ({model | appMode = mode}, Cmd.none)
+    View SelectConfig ->
+      ( { model | appMode = case model.appMode of 
+          Status -> Config
+          Config -> Status
+          SelectVideo _ -> Status
+        }
+      , Cmd.none
+      )
+    View (SelectVideoSource index) ->
+      ({model | appMode = SelectVideo index}, Cmd.none)
     View (SetVideoSource index source) ->
       ( updateActive { model
         | ruleSet = updateRule index (updateVideoSourceName source) model.ruleSet

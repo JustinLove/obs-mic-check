@@ -12,7 +12,8 @@ type ViewMsg
   = None
   | Connect
   | SetPassword String
-  | SetMode AppMode
+  | SelectConfig
+  | SelectVideoSource Int
   | SetVideoSource Int String
   | SetVideoRender Int Render
 
@@ -89,10 +90,7 @@ displayHeader model =
       ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , case model.appMode of
-        Status -> modeControl model.appMode Config
-        Config -> modeControl model.appMode Status
-        SelectVideo _ -> modeControl model.appMode Status
+    , modeControl (model.appMode /= Status)
     ]
 
 displayStatus model =
@@ -251,7 +249,7 @@ displayVideoRule index videoState =
           [ renderStatus render ]
         , text " "
         , a
-          [ href "#", onClick (SetMode (SelectVideo index)) ]
+          [ href "#", onClick (SelectVideoSource index) ]
           [ text sourceName ]
         ]
 
@@ -283,16 +281,16 @@ displayAudioState audioState =
         , ul [] <| List.map (\e -> li [] [e]) <| List.map displayAudioState states
         ]
 
-modeControl : AppMode -> AppMode -> Html ViewMsg
-modeControl current mode =
+modeControl : Bool -> Html ViewMsg
+modeControl isChecked =
   span []
     [ input
       [ type_ "checkbox"
       , Html.Attributes.name "Config"
       , id "app-mode"
       , value "config"
-      , onCheck (\_ -> SetMode mode)
-      , checked (current /= Status)
+      , onCheck (\_ -> SelectConfig)
+      , checked isChecked
       ] []
     , label [ for "app-mode" ] [text "Config" ]
     ]
