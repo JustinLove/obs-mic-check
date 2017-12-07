@@ -109,19 +109,22 @@ update msg model =
         }
       , Cmd.none
       )
-    View (SelectVideoSource index) ->
+    View (SelectRuleVideoName index) ->
       ({model | appMode = SelectVideo index}, Cmd.none)
-    View (SetVideoSource index source) ->
+    View (SelectVideoRender index) ->
       ( updateActive { model
-        | ruleSet = updateRule index (updateVideoSourceName source) model.ruleSet
-        , appMode = Status
+        | ruleSet = updateRule index toggleVideoRender model.ruleSet
         }
       , Cmd.none)
-    View (SetVideoRender index render) ->
-      ( updateActive { model
-        | ruleSet = updateRule index (updateVideoRender render) model.ruleSet
-        }
-      , Cmd.none)
+    View (SelectVideoSource source) ->
+      case model.appMode of
+        SelectVideo index ->
+          ( updateActive { model
+            | ruleSet = updateRule index (updateVideoSourceName source) model.ruleSet
+            , appMode = Status
+            }
+          , Cmd.none)
+        _ -> (model, Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
@@ -307,9 +310,15 @@ updateVideoSourceName : String -> AlarmRule -> AlarmRule
 updateVideoSourceName newName (AlarmRule (VideoState _ render) audioRule) =
   AlarmRule (VideoState newName render) audioRule
 
-updateVideoRender : Render -> AlarmRule -> AlarmRule
-updateVideoRender newRender (AlarmRule (VideoState sourceName _) audioRule) =
-  AlarmRule (VideoState sourceName newRender) audioRule
+toggleVideoRender : AlarmRule -> AlarmRule
+toggleVideoRender (AlarmRule (VideoState sourceName render) audioRule) =
+  AlarmRule (VideoState sourceName (toggleRender render)) audioRule
+
+toggleRender : Render -> Render
+toggleRender render =
+  case render of
+    Visible -> Hidden
+    Hidden -> Visible
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =

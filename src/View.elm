@@ -13,9 +13,9 @@ type ViewMsg
   | Connect
   | SetPassword String
   | SelectConfig
-  | SelectVideoSource Int
-  | SetVideoSource Int String
-  | SetVideoRender Int Render
+  | SelectRuleVideoName Int
+  | SelectVideoRender Int
+  | SelectVideoSource String
 
 type AppMode
   = Status
@@ -79,7 +79,7 @@ view model =
     , case model.appMode of
         Status -> displayStatus model
         Config -> displayConfig model
-        SelectVideo index -> displaySelectVideo model index
+        SelectVideo index -> displaySelectVideo model
     ]
 
 displayHeader model =
@@ -104,12 +104,12 @@ displayConfig model =
     [ displayScene model.ruleSet model.currentScene
     ]
 
-displaySelectVideo model index =
+displaySelectVideo model =
   let scene = model.currentScene in
   div [ id "select-video" ]
     [ h2 [] [ text scene.name ]
     , table [ class "source-list" ]
-      <| List.map (displaySourceForSelect index) scene.sources
+      <| List.map displaySourceForSelect scene.sources
     ]
 
 targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
@@ -192,27 +192,21 @@ displaySource rules source =
         |> table [ class "rules" ]
     ]
 
-displaySourceForSelect : Int -> Source -> Html ViewMsg
-displaySourceForSelect index source =
+displaySourceForSelect : Source -> Html ViewMsg
+displaySourceForSelect source =
   tr
     [ classList 
       [ ("hidden", source.render == Hidden)
       , ("visible", source.render == Visible)
       , ("source", True)
       ]
-    , onClick (SetVideoSource index source.name)
+    , onClick (SelectVideoSource source.name)
     ]
     [ td [ class "icon" ] [ renderStatus source.render ]
     , td [ class "icon" ] [ audioStatus source.audio ]
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
     ]
-
-toggleRender : Render -> Render
-toggleRender render =
-  case render of
-    Visible -> Hidden
-    Hidden -> Visible
 
 renderStatus : Render -> Html ViewMsg
 renderStatus render =
@@ -245,11 +239,11 @@ displayVideoRule index videoState =
   case videoState of 
     VideoState sourceName render ->
       td []
-        [ a [ href "#", onClick (SetVideoRender index (toggleRender render)) ]
+        [ a [ href "#", onClick (SelectVideoRender index) ]
           [ renderStatus render ]
         , text " "
         , a
-          [ href "#", onClick (SelectVideoSource index) ]
+          [ href "#", onClick (SelectRuleVideoName index) ]
           [ text sourceName ]
         ]
 
