@@ -103,8 +103,7 @@ update msg model =
     View SelectConfig ->
       ( { model | appMode = case model.appMode of 
           Status -> Config
-          Config -> Status
-          SelectVideo _ -> Status
+          _ -> Status
         }
       , Cmd.none
       )
@@ -126,6 +125,8 @@ update msg model =
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
+    View (SelectAudioRule key) ->
+      ({model | appMode = SelectAudio key}, Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =

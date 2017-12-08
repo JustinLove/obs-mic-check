@@ -16,11 +16,17 @@ type ViewMsg
   | SelectRuleVideoName VideoState
   | SelectVideoRender VideoState
   | SelectVideoSource String
+  | SelectAudioRule RuleKey
+
+type RuleKey
+  = VideoKey VideoState
+  | DefaultKey
 
 type AppMode
   = Status
   | Config
   | SelectVideo VideoState
+  | SelectAudio RuleKey
 
 -- VIEW
 
@@ -79,7 +85,8 @@ view model =
     , case model.appMode of
         Status -> displayStatus model
         Config -> displayConfig model
-        SelectVideo index -> displaySelectVideo model
+        SelectVideo _ -> displaySelectVideo model
+        SelectAudio _ -> displaySelectVideo model
     ]
 
 displayHeader model =
@@ -237,14 +244,14 @@ displayRule active (video, audio) =
   tr [ classList [ ("active", active) ] ]
     <| List.append
       [ (displayVideoRule video) ]
-      (displayAudioRule audio)
+      (displayAudioRule (VideoKey video) audio)
 
 displayDefaultRule : Bool -> AudioRule -> Html ViewMsg
 displayDefaultRule active audioRule =
   tr [ classList [ ("active", active) ] ]
     <| List.append
       [ td [] [ text "default " ] ]
-      (displayAudioRule audioRule)
+      (displayAudioRule DefaultKey audioRule)
 
 displayVideoRule : VideoState -> Html ViewMsg
 displayVideoRule videoState =
@@ -259,9 +266,11 @@ displayVideoRule videoState =
           [ text sourceName ]
         ]
 
-displayAudioRule : AudioRule -> List (Html ViewMsg)
-displayAudioRule (AudioRule audioState timeout) =
-  [ td [] [ displayAudioState audioState ]
+displayAudioRule : RuleKey -> AudioRule -> List (Html ViewMsg)
+displayAudioRule key (AudioRule audioState timeout) =
+  [ td
+    [ onClick <| SelectAudioRule key ]
+    [ displayAudioState audioState ]
   , td []
     [ text <| toString timeout
     ]
