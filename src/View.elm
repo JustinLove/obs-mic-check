@@ -40,6 +40,8 @@ css = """
 #config { display: none; }
 .mode-status #status { display: block; }
 .mode-config #config { display: block; }
+.audio-mode { width: 10em; height: 2em; }
+.current-mode { background-color: #bbf; }
 
 .rules { border: solid #aaa 1px; border-collapse: collapse;}
 .rules td, .rules th {
@@ -379,14 +381,14 @@ modeControl isChecked =
 
 audioGroup : String -> Bool -> Html ViewMsg
 audioGroup name isSelected =
-  span []
-    [ input
-      [ type_ "radio"
-      , Html.Attributes.name "audio-group"
-      , id ("audio-group-" ++ name)
-      , value name
-      , onCheck (\_ -> None)
-      , checked isSelected
-      ] []
-    , label [ for ("audio-group-" ++ name) ] [text name ]
-    ]
+  input
+    [ type_ "button"
+    , Html.Attributes.name ("audio-group-" ++ name)
+    , id ("audio-group-" ++ name)
+    , value name
+    , onClick None
+    , classList
+      [ ("current-mode", isSelected)
+      , ("audio-mode", True)
+      ]
+    ] []
