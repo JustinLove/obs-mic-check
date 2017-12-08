@@ -1,6 +1,7 @@
 module OBSWebSocket.Data exposing (..)
 
 import Json.Decode exposing (..)
+import Set
 
 type alias Version =
   { obsWebsocketVersion : String
@@ -68,3 +69,48 @@ render =
 muted : Decoder Audio
 muted =
   map (\b -> if b then Muted else Live) bool
+
+mightBeVideoSource : Source -> Bool
+mightBeVideoSource scene =
+  if knownVideoSource scene then
+    True
+  else
+    if knownAudioSource scene then
+      False
+    else
+      True
+
+mightBeAudioSource : Source -> Bool
+mightBeAudioSource source =
+  if knownAudioSource source then
+    True
+  else
+    if knownVideoSource source then
+      False
+    else
+      True
+
+knownVideoSource : Source -> Bool
+knownVideoSource source =
+  Set.member source.type_ knownVideoSources
+
+knownVideoSources = Set.fromList
+  [ "game_capture"
+  , "text_gdiplus"
+  , "image_source"
+  , "window_capture"
+  , "monitor_capture"
+  , "browser_source"
+  , "dshow_input"
+  ]
+
+knownAudioSource : Source -> Bool
+knownAudioSource source =
+  Set.member source.type_ knownAudioSources
+
+knownAudioSources = Set.fromList
+  [ "dshow_input"
+  , "wasapi_input_capture"
+  , "special-source"
+  ]
+

@@ -1,6 +1,6 @@
 module View exposing (view, ViewMsg(..), AppMode(..))
 
-import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..))
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
 
 import Html exposing (..)
@@ -124,14 +124,18 @@ displaySelectVideo model =
   div [ id "select-video" ]
     [ h2 [] [ text scene.name ]
     , table [ class "source-list" ]
-      <| List.map (displaySourceForSelect SelectVideoSource) scene.sources
+      <| List.map (displaySourceForSelect SelectVideoSource)
+      <| List.filter mightBeVideoSource
+      <| scene.sources
     ]
 
 displaySelectAudio model =
   let sources = Dict.values model.allSources in
   div [ id "select-audio" ]
     [ table [ class "source-list" ]
-      <| List.map displayAudioSourceChoice sources
+      <| List.map displayAudioSourceChoice
+      <| List.filter mightBeAudioSource
+      <| sources
     ]
 
 targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
