@@ -1,4 +1,4 @@
-module View exposing (view, ViewMsg(..), AppMode(..))
+module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
@@ -27,7 +27,7 @@ type AppMode
   = Status
   | Config
   | SelectVideo VideoState
-  | SelectAudio RuleKey
+  | SelectAudio RuleKey AudioState
 
 -- VIEW
 
@@ -87,7 +87,7 @@ view model =
         Status -> displayStatus model
         Config -> displayConfig model
         SelectVideo _ -> displaySelectVideo model
-        SelectAudio _ -> displaySelectAudio model
+        SelectAudio _ audioState -> displaySelectAudio model audioState
     ]
 
 displayHeader model =
@@ -129,10 +129,21 @@ displaySelectVideo model =
       <| scene.sources
     ]
 
-displaySelectAudio model =
-  let sources = Dict.values model.allSources in
+displaySelectAudio model audioState =
+  let
+      sources = Dict.values model.allSources
+      (any, all, contents) = case audioState of
+        AudioState _ _ -> (False, False, [ audioState ])
+        AnyAudio states -> (True, False, states)
+        AllAudio states -> (False, True, states)
+  in
+
   div [ id "select-audio" ]
-    [ table [ class "source-list" ]
+    [ div []
+      [ audioGroup "Any" any
+      , audioGroup "All" all
+      ]
+    , table [ class "source-list" ]
       <| List.map displayAudioSourceChoice
       <| List.filter mightBeAudioSource
       <| sources
@@ -347,4 +358,18 @@ modeControl isChecked =
       , checked isChecked
       ] []
     , label [ for "app-mode" ] [text "Config" ]
+    ]
+
+audioGroup : String -> Bool -> Html ViewMsg
+audioGroup name isSelected =
+  span []
+    [ input
+      [ type_ "radio"
+      , Html.Attributes.name "audio-group"
+      , id ("audio-group-" ++ name)
+      , value name
+      , onCheck (\_ -> None)
+      , checked isSelected
+      ] []
+    , label [ for ("audio-group-" ++ name) ] [text name ]
     ]

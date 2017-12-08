@@ -13,6 +13,7 @@ module RuleSet exposing
   , update
   , remove
   , get
+  , default
   , toList
   )
 
@@ -133,6 +134,9 @@ get videoState (RuleSet _ rules) =
   rules
     |> List.filterMap (\(vid, aud) -> if videoState == vid then Just aud else Nothing)
     |> List.head
+
+default : RuleSet -> AudioRule
+default (RuleSet def _) = def
 
 videoStates : RuleSet -> List VideoState
 videoStates (RuleSet _ rules) =

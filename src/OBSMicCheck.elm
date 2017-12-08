@@ -1,6 +1,6 @@
 module OBSMicCheck exposing (..)
 
-import View exposing (view, ViewMsg(..), AppMode(..))
+import View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
@@ -129,7 +129,22 @@ update msg model =
           , Cmd.none)
         _ -> (model, Cmd.none)
     View (SelectAudioRule key) ->
-      ({model | appMode = SelectAudio key}, Cmd.none)
+      case key of
+        VideoKey videoState ->
+          case RuleSet.get videoState model.ruleSet of
+            Just (AudioRule audioState _) ->
+              ( { model
+                | appMode = SelectAudio key audioState
+                }
+              , Cmd.none)
+            Nothing ->
+              (model, Cmd.none)
+        DefaultKey ->
+          let (AudioRule audioState _) = RuleSet.default model.ruleSet in
+          ( { model
+            | appMode = SelectAudio key audioState
+            }
+          , Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
