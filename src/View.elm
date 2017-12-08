@@ -7,6 +7,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
 import Json.Decode
+import Dict
 
 type ViewMsg
   = None
@@ -86,7 +87,7 @@ view model =
         Status -> displayStatus model
         Config -> displayConfig model
         SelectVideo _ -> displaySelectVideo model
-        SelectAudio _ -> displaySelectVideo model
+        SelectAudio _ -> displaySelectAudio model
     ]
 
 displayHeader model =
@@ -123,7 +124,14 @@ displaySelectVideo model =
   div [ id "select-video" ]
     [ h2 [] [ text scene.name ]
     , table [ class "source-list" ]
-      <| List.map displaySourceForSelect scene.sources
+      <| List.map (displaySourceForSelect SelectVideoSource) scene.sources
+    ]
+
+displaySelectAudio model =
+  let sources = Dict.values model.allSources in
+  div [ id "select-audio" ]
+    [ table [ class "source-list" ]
+      <| List.map displayAudioSourceChoice sources
     ]
 
 targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
@@ -211,18 +219,45 @@ displaySource ruleSet source =
       |> table [ class "rules" ]
     ]
 
-displaySourceForSelect : Source -> Html ViewMsg
-displaySourceForSelect source =
+displaySourceForSelect : (String -> ViewMsg) -> Source -> Html ViewMsg
+displaySourceForSelect tagger source =
   tr
     [ classList 
       [ ("hidden", source.render == Hidden)
       , ("visible", source.render == Visible)
       , ("source", True)
       ]
-    , onClick (SelectVideoSource source.name)
+    , onClick (tagger source.name)
     ]
     [ td [ class "icon" ] [ renderStatus source.render ]
     , td [ class "icon" ] [ audioStatus source.audio ]
+    , td [] [ text source.name ]
+    , td [] [ em [] [ text source.type_ ] ]
+    ]
+
+displayAudioSourceChoice : Source -> Html ViewMsg
+displayAudioSourceChoice source =
+  tr
+    [ classList 
+      [ ("hidden", source.render == Hidden)
+      , ("visible", source.render == Visible)
+      , ("source", True)
+      ]
+    ]
+    [ td [ class "icon" ]
+      [ input
+        [ type_ "checkbox"
+        , Html.Attributes.name (source.name ++ "-selected")
+        , id (source.name ++ "-selected")
+        , value "selected"
+        , onCheck (\_ -> None)
+        , checked False
+        ] []
+      ]
+    , td [ class "icon" ] [ renderStatus source.render ]
+    , td [ class "icon", onClick None ]
+      [ audioStatus source.audio
+      ]
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
     ]
