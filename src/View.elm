@@ -144,7 +144,7 @@ displaySelectAudio model audioState =
       , audioGroup "All" all
       ]
     , table [ class "source-list" ]
-      <| List.map displayAudioSourceChoice
+      <| List.map (displayAudioSourceChoice contents)
       <| List.filter mightBeAudioSource
       <| sources
     ]
@@ -250,8 +250,12 @@ displaySourceForSelect tagger source =
     , td [] [ em [] [ text source.type_ ] ]
     ]
 
-displayAudioSourceChoice : Source -> Html ViewMsg
-displayAudioSourceChoice source =
+displayAudioSourceChoice : List AudioState -> Source -> Html ViewMsg
+displayAudioSourceChoice audioStates source =
+  let status = audioStates
+    |> List.filterMap (matchingAudioStatus source.name)
+    |> List.head
+  in
   tr
     [ classList 
       [ ("hidden", source.render == Hidden)
@@ -266,16 +270,29 @@ displayAudioSourceChoice source =
         , id (source.name ++ "-selected")
         , value "selected"
         , onCheck (\_ -> None)
-        , checked False
+        , checked (status /= Nothing)
         ] []
       ]
     , td [ class "icon" ] [ renderStatus source.render ]
     , td [ class "icon", onClick None ]
-      [ audioStatus source.audio
-      ]
+      [ status |> Maybe.map audioStatus |> Maybe.withDefault (text "")]
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
     ]
+
+matchingAudioStatus : String -> AudioState -> Maybe Audio
+matchingAudioStatus sourceName audioState =
+  case audioState of 
+    AudioState name status ->
+      if name == sourceName then Just status else Nothing
+    AnyAudio states ->
+      states
+        |> List.filterMap (matchingAudioStatus sourceName)
+        |> List.head
+    AllAudio states ->
+      states
+        |> List.filterMap (matchingAudioStatus sourceName)
+        |> List.head
 
 renderStatus : Render -> Html ViewMsg
 renderStatus render =
