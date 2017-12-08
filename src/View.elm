@@ -91,6 +91,13 @@ displayHeader model =
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
     , modeControl (model.appMode /= Status)
+    , if alarming model.alarm then
+        audio
+          [ autoplay True
+          , src "167337__willy-ineedthatapp-com__pup-alert.mp3"
+          ] []
+      else
+        text ""
     ]
 
 displayStatus model =
