@@ -10,6 +10,7 @@ type ResponseData
   | AuthNotRequired
   | Authenticate
   | CurrentScene Scene
+  | SceneList String (List Scene)
   | GetMuted String Audio
   | GetSpecialSources SpecialSources
 
@@ -20,6 +21,7 @@ response =
     , getAuthRequired
     , authenticate
     , currentScene
+    , sceneList
     , getMuted
     , getSpecialSources
     ]
@@ -60,6 +62,12 @@ authenticate =
 currentScene : Decoder ResponseData
 currentScene =
   scene |> map CurrentScene
+
+sceneList : Decoder ResponseData
+sceneList =
+  map2 SceneList
+    (field "current-scene" string)
+    (field "scenes" (list scene))
 
 getMuted : Decoder ResponseData
 getMuted =

@@ -14,6 +14,7 @@ import WebSocket
 import Json.Decode
 import Json.Encode
 import Set
+import Dict exposing (Dict)
 
 obsAddress = "ws://localhost:4444"
 
@@ -38,6 +39,7 @@ type alias Model =
   , password : String
   , currentScene : Scene
   , specialSources : SpecialSources
+  , allSources : Dict String Source
   , ruleSet : RuleSet
   , activeAudioRule : AudioRule
   , alarm : Alarm
@@ -63,6 +65,7 @@ makeModel =
     ""
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
+    Dict.empty
     ( RuleSet.empty defaultAudio
       |> RuleSet.insert 
         (VideoState "BRB - text 2" Visible) 
@@ -145,6 +148,14 @@ updateResponse response model =
       authenticated model
     Response.CurrentScene scene ->
       updateSources model scene model.specialSources
+    Response.SceneList currentSceneName scenes ->
+      ( { model
+        | allSources =
+          updateAllSources model.specialSources
+            (List.concatMap .sources scenes)
+        }
+      , Cmd.none
+      )
     Response.GetMuted sourceName audio ->
       ( checkAlarms {model | currentScene = setAudio model.currentScene sourceName audio}
       , Cmd.none
@@ -196,6 +207,7 @@ refreshScene : Cmd Msg
 refreshScene =
   Cmd.batch
     [ obsSend <| Request.getCurrentScene
+    , obsSend <| Request.getSceneList
     , obsSend <| Request.getSpecialSources
     ]
 
@@ -232,27 +244,35 @@ setAudio scene sourceName audio =
 
 updateSources : Model -> Scene -> SpecialSources -> (Model, Cmd Msg)
 updateSources model scene specialSources =
-  let scenePlus = addSpecialSources specialSources scene in
+  let
+    scenePlus = { scene
+      | sources = addSpecialSources specialSources scene.sources }
+  in
   ( updateActive { model
     | currentScene = scenePlus
     , specialSources = specialSources
+    , allSources = updateAllSources specialSources (Dict.values model.allSources)
     }
   , scenePlus.sources
     |> List.map (.name >> Request.getMute >> obsSend)
     |> Cmd.batch
   )
 
-addSpecialSources : SpecialSources -> Scene -> Scene
-addSpecialSources specialSources scene =
-  { scene | sources =
-    scene.sources
-      |> List.map .name
-      |> Set.fromList
-      |> Set.diff (specialSourceNames specialSources |> Set.fromList)
-      |> Set.toList
-      |> List.map (\name -> Source name Hidden "special-source" 1.0 Live)
-      |> List.append scene.sources
-  }
+updateAllSources : SpecialSources -> List Source -> Dict String Source
+updateAllSources specialSources sources =
+  addSpecialSources specialSources sources
+    |> List.map (\s -> (s.name, s))
+    |> Dict.fromList
+
+addSpecialSources : SpecialSources -> List Source -> List Source
+addSpecialSources specialSources sources =
+  sources
+    |> List.map .name
+    |> Set.fromList
+    |> Set.diff (specialSourceNames specialSources |> Set.fromList)
+    |> Set.toList
+    |> List.map (\name -> Source name Hidden "special-source" 1.0 Live)
+    |> List.append sources
 
 specialSourceNames : SpecialSources -> List String
 specialSourceNames sources = 

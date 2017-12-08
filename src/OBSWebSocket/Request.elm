@@ -7,6 +7,7 @@ type Request
   | GetAuthRequired
   | Authenticate String
   | GetCurrentScene
+  | GetSceneList
   | GetMute String
   | GetSpecialSources
 
@@ -33,6 +34,9 @@ authenticate auth =
 
 getCurrentScene : Value
 getCurrentScene = basicRequest GetCurrentScene
+
+getSceneList : Value
+getSceneList = basicRequest GetSceneList
 
 getMute : String -> Value
 getMute source =
