@@ -154,6 +154,15 @@ update msg model =
           , Cmd.none)
         _ -> (model, Cmd.none)
 
+    View (SelectAudioStatus sourceName) ->
+      case model.appMode of
+        SelectAudio ruleKey audioState ->
+          ( updateActive { model
+            | appMode = SelectAudio ruleKey (toggleAudioStatus sourceName audioState)
+            }
+          , Cmd.none)
+        _ -> (model, Cmd.none)
+
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
   case response of
@@ -369,6 +378,23 @@ toggleAudioSource toggle state =
       |> Maybe.withDefault (AnyAudio [])
   else
     audioStateAdd toggle state
+
+toggleAudioStatus : String -> AudioState -> AudioState
+toggleAudioStatus toggle state =
+  case state of
+    AudioState name status ->
+      if name == toggle then
+        AudioState name (toggleAudio status)
+      else
+        state
+    AnyAudio states -> AnyAudio <| List.map (toggleAudioStatus toggle) states
+    AllAudio states -> AllAudio <| List.map (toggleAudioStatus toggle) states
+
+toggleAudio : Audio -> Audio
+toggleAudio audio =
+  case audio of
+    Live -> Muted
+    Muted -> Live
 
 audioStateContains : String -> AudioState -> Bool
 audioStateContains sourceName state =

@@ -19,6 +19,7 @@ type ViewMsg
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
+  | SelectAudioStatus String
 
 type RuleKey
   = VideoKey VideoState
@@ -277,7 +278,7 @@ displayAudioSourceChoice audioStates source =
         ] []
       ]
     , td [ class "icon" ] [ renderStatus source.render ]
-    , td [ class "icon", onClick None ]
+    , td [ class "icon", onClick (SelectAudioStatus source.name) ]
       [ status |> Maybe.map audioStatus |> Maybe.withDefault (text "")]
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
