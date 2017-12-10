@@ -12,6 +12,7 @@ module RuleSet exposing
   , insert
   , update
   , remove
+  , mapDefault
   , get
   , default
   , toList
@@ -128,6 +129,9 @@ update key f (RuleSet default rules) =
 remove : VideoState -> RuleSet -> RuleSet
 remove key (RuleSet default rules) =
   RuleSet default <| List.filter (\(vid, aud) -> vid /= key) rules
+
+mapDefault : (AudioRule -> AudioRule) -> RuleSet -> RuleSet
+mapDefault f (RuleSet default rules) = RuleSet (f default) rules
 
 get : VideoState -> RuleSet -> Maybe AudioRule
 get videoState (RuleSet _ rules) =

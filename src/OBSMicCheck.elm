@@ -153,12 +153,20 @@ update msg model =
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
-
     View (SelectAudioStatus sourceName) ->
       case model.appMode of
         SelectAudio ruleKey audioState ->
           ( updateActive { model
             | appMode = SelectAudio ruleKey (toggleAudioStatus sourceName audioState)
+            }
+          , Cmd.none)
+        _ -> (model, Cmd.none)
+    View (SelectAudioMode audioState) ->
+      case model.appMode of
+        SelectAudio ruleKey _ ->
+          ( updateActive { model
+            | ruleSet = mapRuleValue ruleKey (mapAudioState (\_ -> audioState)) model.ruleSet
+            , appMode = Status
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
@@ -370,6 +378,22 @@ toggleRender render =
   case render of
     Visible -> Hidden
     Hidden -> Visible
+
+mapRuleValue : RuleKey -> (AudioRule -> AudioRule) -> RuleSet -> RuleSet
+mapRuleValue key f ruleSet =
+  case key of
+    VideoKey videoState ->
+      case RuleSet.get videoState ruleSet of
+        Just audio ->
+          ruleSet
+            |> RuleSet.insert videoState (f audio)
+        Nothing -> ruleSet
+    DefaultKey ->
+      RuleSet.mapDefault f ruleSet
+
+mapAudioState : (AudioState -> AudioState) -> AudioRule -> AudioRule
+mapAudioState f (AudioRule audioState timeout) =
+  (AudioRule (f audioState) timeout)
 
 toggleAudioSource : String -> AudioState -> AudioState
 toggleAudioSource toggle state =

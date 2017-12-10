@@ -20,6 +20,7 @@ type ViewMsg
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
   | SelectAudioStatus String
+  | SelectAudioMode AudioState
 
 type RuleKey
   = VideoKey VideoState
@@ -144,8 +145,8 @@ displaySelectAudio model audioState =
 
   div [ id "select-audio" ]
     [ div []
-      [ audioGroup "Any" any
-      , audioGroup "All" all
+      [ audioGroup "Any" any (SelectAudioMode <| AnyAudio contents)
+      , audioGroup "All" all (SelectAudioMode <| AllAudio contents)
       ]
     , table [ class "source-list" ]
       <| List.map (displayAudioSourceChoice contents)
@@ -381,14 +382,14 @@ modeControl isChecked =
     , label [ for "app-mode" ] [text "Config" ]
     ]
 
-audioGroup : String -> Bool -> Html ViewMsg
-audioGroup name isSelected =
+audioGroup : String -> Bool -> ViewMsg -> Html ViewMsg
+audioGroup name isSelected msg =
   input
     [ type_ "button"
     , Html.Attributes.name ("audio-group-" ++ name)
     , id ("audio-group-" ++ name)
     , value name
-    , onClick None
+    , onClick msg
     , classList
       [ ("current-mode", isSelected)
       , ("audio-mode", True)
