@@ -145,6 +145,14 @@ update msg model =
             | appMode = SelectAudio key audioState
             }
           , Cmd.none)
+    View (SelectAudioSource sourceName) ->
+      case model.appMode of
+        SelectAudio ruleKey audioState ->
+          ( updateActive { model
+            | appMode = SelectAudio ruleKey (toggleAudioSource sourceName audioState)
+            }
+          , Cmd.none)
+        _ -> (model, Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
@@ -353,6 +361,36 @@ toggleRender render =
   case render of
     Visible -> Hidden
     Hidden -> Visible
+
+toggleAudioSource : String -> AudioState -> AudioState
+toggleAudioSource toggle state =
+  if audioStateContains toggle state then
+    audioStateRemove toggle state
+      |> Maybe.withDefault (AnyAudio [])
+  else
+    audioStateAdd toggle state
+
+audioStateContains : String -> AudioState -> Bool
+audioStateContains sourceName state =
+  case state of
+    AudioState name _ -> name == sourceName
+    AnyAudio states -> List.any (audioStateContains sourceName) states
+    AllAudio states -> List.any (audioStateContains sourceName) states
+
+audioStateRemove : String -> AudioState -> Maybe AudioState
+audioStateRemove sourceName state =
+  case state of
+    AudioState name _ -> if name == sourceName then Nothing else Just state
+    AnyAudio states -> Just <| AnyAudio <| List.filterMap (audioStateRemove sourceName) states
+    AllAudio states -> Just <| AllAudio <| List.filterMap (audioStateRemove sourceName) states
+
+audioStateAdd : String -> AudioState -> AudioState
+audioStateAdd sourceName state =
+  let newState = (AudioState sourceName Live) in
+  case state of
+    AudioState _ _ -> AnyAudio [ newState, state ]
+    AnyAudio states -> AnyAudio <| (::) newState states
+    AllAudio states -> AllAudio <| (::) newState states
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =

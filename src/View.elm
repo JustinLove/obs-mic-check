@@ -18,6 +18,7 @@ type ViewMsg
   | SelectRuleVideoRender VideoState
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
+  | SelectAudioSource String
 
 type RuleKey
   = VideoKey VideoState
@@ -271,7 +272,7 @@ displayAudioSourceChoice audioStates source =
         , Html.Attributes.name (source.name ++ "-selected")
         , id (source.name ++ "-selected")
         , value "selected"
-        , onCheck (\_ -> None)
+        , onCheck (\_ -> (SelectAudioSource source.name))
         , checked (status /= Nothing)
         ] []
       ]
