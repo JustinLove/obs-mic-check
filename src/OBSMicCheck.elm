@@ -170,6 +170,11 @@ update msg model =
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
+    View (SetTimeout ruleKey timeout) ->
+      ( updateActive { model
+        | ruleSet = mapRuleValue ruleKey (\(AudioRule state _) -> AudioRule state timeout) model.ruleSet
+        }
+      , Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =

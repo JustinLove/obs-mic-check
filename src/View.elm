@@ -8,6 +8,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
 import Json.Decode
 import Dict
+import Regex exposing (regex)
 
 type ViewMsg
   = None
@@ -21,6 +22,7 @@ type ViewMsg
   | SelectAudioSource String
   | SelectAudioStatus String
   | SelectAudioMode AudioState
+  | SetTimeout RuleKey Int
 
 type RuleKey
   = VideoKey VideoState
@@ -56,6 +58,8 @@ css = """
   padding-right: 1em;
 }
 .rules ul { margin: 0; }
+
+.timeout { width: 4em; }
 
 .source-list { border: solid #aaa 1px; border-collapse: collapse;}
 .source-list td, .source-list th {
@@ -99,7 +103,7 @@ displayHeader model =
   header []
     [ input
       [ type_ "password"
-      , on "change" <| targetValue SetPassword
+      , on "change" <| targetValue Json.Decode.string SetPassword
       ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
@@ -154,10 +158,28 @@ displaySelectAudio model audioState =
       <| sources
     ]
 
-targetValue : (String -> ViewMsg) -> Json.Decode.Decoder ViewMsg
-targetValue tagger =
+targetValue : Json.Decode.Decoder a -> (a -> ViewMsg) -> Json.Decode.Decoder ViewMsg
+targetValue decoder tagger =
   Json.Decode.map tagger
-    (Json.Decode.at ["target", "value" ] Json.Decode.string)
+    (Json.Decode.at ["target", "value" ] decoder)
+
+int : Json.Decode.Decoder Int
+int =
+  Json.Decode.string
+    |> Json.Decode.andThen (\text ->
+      if validNumber text then
+        Json.Decode.succeed <| getNumber text
+      else
+        Json.Decode.fail "not an integer"
+      )
+
+getNumber : String -> Int
+getNumber s =
+  String.toInt s |> Result.withDefault 0
+
+validNumber : String -> Bool
+validNumber value =
+  Regex.contains (regex "^\\d+$") value
 
 violated : Int -> Alarm -> AudioRule -> Html ViewMsg
 violated time alarm audioRule =
@@ -344,7 +366,13 @@ displayAudioRule key (AudioRule audioState timeout) =
     [ onClick <| SelectRuleAudioRule key ]
     [ displayAudioState audioState ]
   , td []
-    [ text <| toString timeout
+    [ input
+      [ value <| toString timeout
+      , type_ "number"
+      , Html.Attributes.min "0"
+      , on "change" <| targetValue int (SetTimeout key)
+      , class "timeout"
+      ] []
     ]
   ]
 
