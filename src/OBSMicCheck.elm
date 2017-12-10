@@ -110,7 +110,7 @@ update msg model =
         }
       , Cmd.none
       )
-    View (SelectVideoRender videoState) ->
+    View (SelectRuleVideoRender videoState) ->
       let (VideoState name render) = videoState in
       ( updateActive { model
         | ruleSet = mapRuleKey videoState (VideoState name (toggleRender render)) model.ruleSet
@@ -128,7 +128,7 @@ update msg model =
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
-    View (SelectAudioRule key) ->
+    View (SelectRuleAudioRule key) ->
       case key of
         VideoKey videoState ->
           case RuleSet.get videoState model.ruleSet of

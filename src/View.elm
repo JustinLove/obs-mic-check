@@ -15,9 +15,9 @@ type ViewMsg
   | SetPassword String
   | SelectConfig
   | SelectRuleVideoName VideoState
-  | SelectVideoRender VideoState
+  | SelectRuleVideoRender VideoState
   | SelectVideoSource String
-  | SelectAudioRule RuleKey
+  | SelectRuleAudioRule RuleKey
 
 type RuleKey
   = VideoKey VideoState
@@ -327,7 +327,7 @@ displayVideoRule videoState =
   case videoState of 
     VideoState sourceName render ->
       td []
-        [ a [ href "#", onClick (SelectVideoRender videoState) ]
+        [ a [ href "#", onClick (SelectRuleVideoRender videoState) ]
           [ renderStatus render ]
         , text " "
         , a
@@ -338,7 +338,7 @@ displayVideoRule videoState =
 displayAudioRule : RuleKey -> AudioRule -> List (Html ViewMsg)
 displayAudioRule key (AudioRule audioState timeout) =
   [ td
-    [ onClick <| SelectAudioRule key ]
+    [ onClick <| SelectRuleAudioRule key ]
     [ displayAudioState audioState ]
   , td []
     [ text <| toString timeout
