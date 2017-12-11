@@ -7,7 +7,7 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..))
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..))
 
 import Html
 import WebSocket
@@ -55,7 +55,7 @@ allMics audio =
   , (AudioState "Podcaster - Stepmania" audio)
   ]
 
-defaultAudio = AudioRule (AllAudio (allMics Muted)) 5
+defaultAudio = AudioRule All (allMics Muted) 5
 
 makeModel : Model
 makeModel =
@@ -69,13 +69,13 @@ makeModel =
     ( RuleSet.empty defaultAudio
       |> RuleSet.insert 
         (VideoState "BRB - text 2" Visible) 
-        (AudioRule (AnyAudio (allMics Live)) 5)
+        (AudioRule Any (allMics Live) 5)
       |> RuleSet.insert 
         (VideoState "Starting soon - text" Visible) 
-        (AudioRule (AnyAudio (allMics Live)) 5)
+        (AudioRule Any (allMics Live) 5)
       |> RuleSet.insert 
         (VideoState "Stream over - text" Visible) 
-        (AudioRule (AnyAudio (allMics Live)) (5 * 60))
+        (AudioRule Any (allMics Live) (5 * 60))
     )
     defaultAudio
     Silent
@@ -132,47 +132,53 @@ update msg model =
       case key of
         VideoKey videoState ->
           case RuleSet.get videoState model.ruleSet of
-            Just (AudioRule audioState _) ->
+            Just (AudioRule operator audioState _) ->
               ( { model
-                | appMode = SelectAudio key audioState
+                | appMode = SelectAudio key operator audioState
                 }
               , Cmd.none)
             Nothing ->
               (model, Cmd.none)
         DefaultKey ->
-          let (AudioRule audioState _) = RuleSet.default model.ruleSet in
+          let (AudioRule operator audioState _) = RuleSet.default model.ruleSet in
           ( { model
-            | appMode = SelectAudio key audioState
+            | appMode = SelectAudio key operator audioState
             }
           , Cmd.none)
     View (SelectAudioSource sourceName) ->
       case model.appMode of
-        SelectAudio ruleKey audioState ->
+        SelectAudio ruleKey operator audioStates ->
           ( updateActive { model
-            | appMode = SelectAudio ruleKey (toggleAudioSource sourceName audioState)
+            | appMode = SelectAudio ruleKey operator
+              (toggleAudioSource sourceName audioStates)
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
     View (SelectAudioStatus sourceName) ->
       case model.appMode of
-        SelectAudio ruleKey audioState ->
+        SelectAudio ruleKey operator audioStates ->
           ( updateActive { model
-            | appMode = SelectAudio ruleKey (toggleAudioStatus sourceName audioState)
+            | appMode = SelectAudio ruleKey operator
+              (List.map (toggleAudioStatus sourceName) audioStates)
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
-    View (SelectAudioMode audioState) ->
+    View (SelectAudioMode operator) ->
       case model.appMode of
-        SelectAudio ruleKey _ ->
+        SelectAudio ruleKey _ audioStates ->
           ( updateActive { model
-            | ruleSet = mapRuleValue ruleKey (mapAudioState (\_ -> audioState)) model.ruleSet
+            | ruleSet = mapRuleValue ruleKey
+              (\(AudioRule _ _ timeout) -> AudioRule operator audioStates timeout)
+              model.ruleSet
             , appMode = Status
             }
           , Cmd.none)
         _ -> (model, Cmd.none)
     View (SetTimeout ruleKey timeout) ->
       ( updateActive { model
-        | ruleSet = mapRuleValue ruleKey (\(AudioRule state _) -> AudioRule state timeout) model.ruleSet
+        | ruleSet = mapRuleValue ruleKey
+          (\(AudioRule operator state _) -> AudioRule operator state timeout)
+          model.ruleSet
         }
       , Cmd.none)
 
@@ -363,7 +369,7 @@ checkAlarms model =
   }
 
 checkTimeout : Int -> Int -> AudioRule -> Alarm
-checkTimeout start time (AudioRule _ timeout) =
+checkTimeout start time (AudioRule _ _ timeout) =
   if time - start > timeout then
     Alarming start
   else
@@ -396,17 +402,17 @@ mapRuleValue key f ruleSet =
     DefaultKey ->
       RuleSet.mapDefault f ruleSet
 
-mapAudioState : (AudioState -> AudioState) -> AudioRule -> AudioRule
-mapAudioState f (AudioRule audioState timeout) =
-  (AudioRule (f audioState) timeout)
-
-toggleAudioSource : String -> AudioState -> AudioState
-toggleAudioSource toggle state =
-  if audioStateContains toggle state then
-    audioStateRemove toggle state
-      |> Maybe.withDefault (AnyAudio [])
-  else
-    audioStateAdd toggle state
+toggleAudioSource : String -> List AudioState -> List AudioState
+toggleAudioSource toggle states =
+  let
+    (matched, rest) = List.partition
+      (\(AudioState name _) -> name == toggle)
+      states
+  in
+    if List.isEmpty matched then
+      (AudioState toggle Live) :: states
+    else
+      rest
 
 toggleAudioStatus : String -> AudioState -> AudioState
 toggleAudioStatus toggle state =
@@ -416,36 +422,12 @@ toggleAudioStatus toggle state =
         AudioState name (toggleAudio status)
       else
         state
-    AnyAudio states -> AnyAudio <| List.map (toggleAudioStatus toggle) states
-    AllAudio states -> AllAudio <| List.map (toggleAudioStatus toggle) states
 
 toggleAudio : Audio -> Audio
 toggleAudio audio =
   case audio of
     Live -> Muted
     Muted -> Live
-
-audioStateContains : String -> AudioState -> Bool
-audioStateContains sourceName state =
-  case state of
-    AudioState name _ -> name == sourceName
-    AnyAudio states -> List.any (audioStateContains sourceName) states
-    AllAudio states -> List.any (audioStateContains sourceName) states
-
-audioStateRemove : String -> AudioState -> Maybe AudioState
-audioStateRemove sourceName state =
-  case state of
-    AudioState name _ -> if name == sourceName then Nothing else Just state
-    AnyAudio states -> Just <| AnyAudio <| List.filterMap (audioStateRemove sourceName) states
-    AllAudio states -> Just <| AllAudio <| List.filterMap (audioStateRemove sourceName) states
-
-audioStateAdd : String -> AudioState -> AudioState
-audioStateAdd sourceName state =
-  let newState = (AudioState sourceName Live) in
-  case state of
-    AudioState _ _ -> AnyAudio [ newState, state ]
-    AnyAudio states -> AnyAudio <| (::) newState states
-    AllAudio states -> AllAudio <| (::) newState states
 
 obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =

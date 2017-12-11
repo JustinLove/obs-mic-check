@@ -1,7 +1,7 @@
 module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), mightBeVideoSource, mightBeAudioSource)
-import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -21,7 +21,7 @@ type ViewMsg
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
   | SelectAudioStatus String
-  | SelectAudioMode AudioState
+  | SelectAudioMode Operator
   | SetTimeout RuleKey Int
 
 type RuleKey
@@ -32,7 +32,7 @@ type AppMode
   = Status
   | Config
   | SelectVideo VideoState
-  | SelectAudio RuleKey AudioState
+  | SelectAudio RuleKey Operator (List AudioState)
 
 -- VIEW
 
@@ -96,7 +96,7 @@ view model =
         Status -> displayStatus model
         Config -> displayConfig model
         SelectVideo _ -> displaySelectVideo model
-        SelectAudio _ audioState -> displaySelectAudio model audioState
+        SelectAudio _ operator audioStates -> displaySelectAudio model operator audioStates
     ]
 
 displayHeader model =
@@ -138,22 +138,17 @@ displaySelectVideo model =
       <| scene.sources
     ]
 
-displaySelectAudio model audioState =
-  let
-      sources = Dict.values model.allSources
-      (any, all, contents) = case audioState of
-        AudioState _ _ -> (False, False, [ audioState ])
-        AnyAudio states -> (True, False, states)
-        AllAudio states -> (False, True, states)
-  in
-
+displaySelectAudio model operator audioStates =
+  let sources = Dict.values model.allSources in
   div [ id "select-audio" ]
     [ div []
-      [ audioGroup "Any" any (SelectAudioMode <| AnyAudio contents)
-      , audioGroup "All" all (SelectAudioMode <| AllAudio contents)
+      [ audioGroup "Any" (operator == Any)
+        (SelectAudioMode Any)
+      , audioGroup "All" (operator == All)
+        (SelectAudioMode All)
       ]
     , table [ class "source-list" ]
-      <| List.map (displayAudioSourceChoice contents)
+      <| List.map (displayAudioSourceChoice audioStates)
       <| List.filter mightBeAudioSource
       <| sources
     ]
@@ -183,7 +178,7 @@ validNumber value =
 
 violated : Int -> Alarm -> AudioRule -> Html ViewMsg
 violated time alarm audioRule =
-  let (AudioRule _ timeout) = audioRule in
+  let (AudioRule _ _ timeout) = audioRule in
   case alarm of
     Silent ->
       alarmTime timeout 0
@@ -308,18 +303,8 @@ displayAudioSourceChoice audioStates source =
     ]
 
 matchingAudioStatus : String -> AudioState -> Maybe Audio
-matchingAudioStatus sourceName audioState =
-  case audioState of 
-    AudioState name status ->
-      if name == sourceName then Just status else Nothing
-    AnyAudio states ->
-      states
-        |> List.filterMap (matchingAudioStatus sourceName)
-        |> List.head
-    AllAudio states ->
-      states
-        |> List.filterMap (matchingAudioStatus sourceName)
-        |> List.head
+matchingAudioStatus sourceName (AudioState name status) =
+  if name == sourceName then Just status else Nothing
 
 renderStatus : Render -> Html ViewMsg
 renderStatus render =
@@ -361,10 +346,14 @@ displayVideoRule videoState =
         ]
 
 displayAudioRule : RuleKey -> AudioRule -> List (Html ViewMsg)
-displayAudioRule key (AudioRule audioState timeout) =
+displayAudioRule key (AudioRule operator states timeout) =
   [ td
     [ onClick <| SelectRuleAudioRule key ]
-    [ displayAudioState audioState ]
+    [ text <| toString operator
+    , ul []
+      <| List.map (\e -> li [] [e])
+      <| List.map displayAudioState states
+    ]
   , td []
     [ input
       [ value <| toString timeout
@@ -377,24 +366,12 @@ displayAudioRule key (AudioRule audioState timeout) =
   ]
 
 displayAudioState : AudioState -> Html ViewMsg
-displayAudioState audioState =
-  case audioState of 
-    AudioState sourceName audio ->
-      div []
-        [ text sourceName
-        , text " "
-        , audioStatus audio
-        ]
-    AnyAudio states ->
-      div []
-        [ text "any"
-        , ul [] <| List.map (\e -> li [] [e]) <| List.map displayAudioState states
-        ]
-    AllAudio states ->
-      div []
-        [ text "all"
-        , ul [] <| List.map (\e -> li [] [e]) <| List.map displayAudioState states
-        ]
+displayAudioState (AudioState sourceName audio) =
+  div []
+    [ text sourceName
+    , text " "
+    , audioStatus audio
+    ]
 
 modeControl : Bool -> Html ViewMsg
 modeControl isChecked =

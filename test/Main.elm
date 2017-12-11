@@ -1,4 +1,4 @@
-import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), activeAudioRule, checkAudioRule)
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), activeAudioRule, checkAudioRule)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 
 import Expectation exposing (eql, isTrue, isFalse)
@@ -64,17 +64,17 @@ allMics audio =
 
 brbLive = (,)
   (VideoState "BRB - text 2" Visible) 
-  (AudioRule (AnyAudio (allMics Live)) 0)
+  (AudioRule Any (allMics Live) 0)
 
 startingLive = (,)
   (VideoState "Starting soon - text" Visible) 
-  (AudioRule (AnyAudio (allMics Live)) 0)
+  (AudioRule Any (allMics Live) 0)
 
 defaultMuted =
-  (AudioRule (AudioState "Podcaster - audio" Muted) 0)
+  (AudioRule Any [AudioState "Podcaster - audio" Muted] 0)
 
 multiMuted =
-  (AudioRule (AllAudio (allMics Muted)) 0)
+  (AudioRule All (allMics Muted) 0)
 
 layer : String -> Render -> Source
 layer name render =

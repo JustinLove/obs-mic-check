@@ -2,6 +2,7 @@ module RuleSet exposing
   ( RuleSet(..)
   , VideoState(..)
   , AudioRule(..)
+  , Operator(..)
   , AudioState(..)
   , Alarm(..)
   , activeAudioRule
@@ -31,12 +32,14 @@ type VideoState
   = VideoState String Render
 
 type AudioRule
-  = AudioRule AudioState Int
+  = AudioRule Operator (List AudioState) Int
+
+type Operator
+  = Any
+  | All
 
 type AudioState
   = AudioState String Audio
-  | AnyAudio (List AudioState)
-  | AllAudio (List AudioState)
 
 type Alarm
   = Silent
@@ -56,25 +59,10 @@ activeAudioRule sources ruleSet =
 audioSourceNames : RuleSet -> List String
 audioSourceNames ruleSet =
   audioRules ruleSet
-    |> List.map (\(AudioRule audioState _) -> audioState)
-    |> List.map audioStateSourceNames
-    |> List.concat
+    |> List.concatMap (\(AudioRule _ audioStates _) -> audioStates)
+    |> List.map (\(AudioState name _) -> name)
     |> Set.fromList
     |> Set.toList
-
-audioStateSourceNames : AudioState -> List String
-audioStateSourceNames state =
-  case state of
-    AudioState sourceName _ ->
-      [ sourceName ]
-    AnyAudio states ->
-      states
-        |> List.map audioStateSourceNames
-        |> List.concat
-    AllAudio states ->
-      states
-        |> List.map audioStateSourceNames
-        |> List.concat
 
 checkVideoState : List Source -> VideoState -> Bool
 checkVideoState sources (VideoState sourceName render) =
@@ -84,26 +72,28 @@ checkVideoState sources (VideoState sourceName render) =
     |> not
 
 checkAudioRule : List Source -> AudioRule -> Bool
-checkAudioRule sources (AudioRule audioState _) =
-  checkAudioState sources audioState
+checkAudioRule sources (AudioRule operator states _) =
+  case operator of
+    Any ->
+      states
+        |> List.map (checkAudioState sources)
+        |> List.foldl (||) False
+    All ->
+      states
+        |> List.map (checkAudioState sources)
+        |> List.foldl (&&) True
 
 checkAudioState : List Source -> AudioState -> Bool
-checkAudioState sources audioState =
-  case audioState of
-    AudioState sourceName audio ->
-      audio == (sources
-        |> List.filterMap (\s ->
-          if s.name == sourceName then
-           Just s.audio
-         else
-           Nothing)
-        |> List.head
-        |> Maybe.withDefault Muted
-      )
-    AnyAudio states ->
-      List.any (checkAudioState sources) states
-    AllAudio states ->
-      List.all (checkAudioState sources) states
+checkAudioState sources (AudioState sourceName audio) =
+  audio == (sources
+    |> List.filterMap (\s ->
+      if s.name == sourceName then
+       Just s.audio
+     else
+       Nothing)
+    |> List.head
+    |> Maybe.withDefault Muted
+  )
 
 empty : AudioRule -> RuleSet
 empty default = RuleSet default []
