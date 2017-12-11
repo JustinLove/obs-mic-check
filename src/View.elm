@@ -134,9 +134,14 @@ displaySelectVideo model =
     [ h2 [] [ text scene.name ]
     , table [ class "source-list" ]
       <| List.map (displaySourceForSelect SelectVideoSource)
+      <| List.filter (noCurrentRule model.ruleSet)
       <| List.filter mightBeVideoSource
       <| scene.sources
     ]
+
+noCurrentRule : RuleSet -> Source -> Bool
+noCurrentRule ruleSet source =
+  Nothing == (RuleSet.get (VideoState source.name Visible) ruleSet)
 
 displaySelectAudio model operator audioStates =
   let sources = Dict.values model.allSources in
