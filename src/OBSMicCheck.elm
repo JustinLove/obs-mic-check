@@ -75,7 +75,7 @@ makeModel =
         (AudioRule (AnyAudio (allMics Live)) 5)
       |> RuleSet.insert 
         (VideoState "Stream over - text" Visible) 
-        (AudioRule (AnyAudio (allMics Live)) 120)
+        (AudioRule (AnyAudio (allMics Live)) (5 * 60))
     )
     defaultAudio
     Silent
