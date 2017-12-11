@@ -116,14 +116,11 @@ update msg model =
         | ruleSet = mapRuleKey videoState (VideoState name (toggleRender render)) model.ruleSet
         }
       , Cmd.none)
-    View (SelectRuleVideoName videoState) ->
-      ({model | appMode = SelectVideo videoState}, Cmd.none)
     View (SelectVideoSource source) ->
       case model.appMode of
-        SelectVideo videoState ->
-          let (VideoState _ render) = videoState in
+        SelectVideo audioRule ->
           ( updateActive { model
-            | ruleSet = mapRuleKey videoState (VideoState source render) model.ruleSet
+            | ruleSet = RuleSet.insert (VideoState source Visible) audioRule model.ruleSet
             , appMode = Status
             }
           , Cmd.none)
@@ -181,6 +178,18 @@ update msg model =
           model.ruleSet
         }
       , Cmd.none)
+    View (CopyRule key) ->
+      case key of
+        VideoKey videoState ->
+          case RuleSet.get videoState model.ruleSet of
+            Just audioRule ->
+              ( {model | appMode = SelectVideo audioRule }
+              , Cmd.none)
+            Nothing ->
+              (model, Cmd.none)
+        DefaultKey ->
+          ( {model | appMode = SelectVideo (RuleSet.default model.ruleSet) }
+          , Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =

@@ -15,7 +15,6 @@ type ViewMsg
   | Connect
   | SetPassword String
   | SelectConfig
-  | SelectRuleVideoName VideoState
   | SelectRuleVideoRender VideoState
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
@@ -23,6 +22,7 @@ type ViewMsg
   | SelectAudioStatus String
   | SelectAudioMode Operator
   | SetTimeout RuleKey Int
+  | CopyRule RuleKey
 
 type RuleKey
   = VideoKey VideoState
@@ -31,7 +31,7 @@ type RuleKey
 type AppMode
   = Status
   | Config
-  | SelectVideo VideoState
+  | SelectVideo AudioRule
   | SelectAudio RuleKey Operator (List AudioState)
 
 -- VIEW
@@ -209,6 +209,7 @@ displayRuleSet sources (RuleSet default rules) =
         [ th [] [ text "Video Source" ]
         , th [] [ text "Audio Status" ]
         , th [] [ text "Seconds" ]
+        , th [] [ text "Copy" ]
         ]
       |> table [ class "rules" ]
     ]
@@ -340,9 +341,7 @@ displayVideoRule videoState =
         [ a [ href "#", onClick (SelectRuleVideoRender videoState) ]
           [ renderStatus render ]
         , text " "
-        , a
-          [ href "#", onClick (SelectRuleVideoName videoState) ]
-          [ text sourceName ]
+        , text sourceName
         ]
 
 displayAudioRule : RuleKey -> AudioRule -> List (Html ViewMsg)
@@ -363,6 +362,8 @@ displayAudioRule key (AudioRule operator states timeout) =
       , class "timeout"
       ] []
     ]
+  , td [ onClick (CopyRule key) ]
+    [ text "Copy" ]
   ]
 
 displayAudioState : AudioState -> Html ViewMsg
