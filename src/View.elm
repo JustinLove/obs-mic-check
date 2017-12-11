@@ -23,6 +23,7 @@ type ViewMsg
   | SelectAudioMode Operator
   | SetTimeout RuleKey Int
   | CopyRule RuleKey
+  | RemoveRule VideoState
 
 type RuleKey
   = VideoKey VideoState
@@ -210,6 +211,7 @@ displayRuleSet sources (RuleSet default rules) =
         , th [] [ text "Audio Status" ]
         , th [] [ text "Seconds" ]
         , th [] [ text "Copy" ]
+        , th [] [ text "Del" ]
         ]
       |> table [ class "rules" ]
     ]
@@ -364,6 +366,12 @@ displayAudioRule key (AudioRule operator states timeout) =
     ]
   , td [ onClick (CopyRule key) ]
     [ text "Copy" ]
+  , case key of
+    VideoKey videoState ->
+      td [ onClick (RemoveRule videoState) ]
+        [ text "X" ]
+    DefaultKey ->
+      td [] []
   ]
 
 displayAudioState : AudioState -> Html ViewMsg

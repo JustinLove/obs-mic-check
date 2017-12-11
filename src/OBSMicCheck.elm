@@ -190,6 +190,9 @@ update msg model =
         DefaultKey ->
           ( {model | appMode = SelectVideo (RuleSet.default model.ruleSet) }
           , Cmd.none)
+    View (RemoveRule videoState) ->
+      ( {model | ruleSet = RuleSet.remove videoState model.ruleSet}
+      , Cmd.none)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
