@@ -110,12 +110,6 @@ update msg model =
         }
       , Cmd.none
       )
-    View (SelectRuleVideoRender videoState) ->
-      let (VideoState name render) = videoState in
-      ( updateActive { model
-        | ruleSet = mapRuleKey videoState (VideoState name (toggleRender render)) model.ruleSet
-        }
-      , Cmd.none)
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->
@@ -386,21 +380,6 @@ checkTimeout start time (AudioRule _ _ timeout) =
     Alarming start
   else
     Violation start
-
-mapRuleKey : VideoState -> VideoState -> RuleSet -> RuleSet
-mapRuleKey key replacement ruleSet =
-  case RuleSet.get key ruleSet of
-    Just audio ->
-      ruleSet
-        |> RuleSet.remove key
-        |> RuleSet.insert replacement audio
-    Nothing -> ruleSet
-
-toggleRender : Render -> Render
-toggleRender render =
-  case render of
-    Visible -> Hidden
-    Hidden -> Visible
 
 mapRuleValue : RuleKey -> (AudioRule -> AudioRule) -> RuleSet -> RuleSet
 mapRuleValue key f ruleSet =

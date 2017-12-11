@@ -15,7 +15,6 @@ type ViewMsg
   | Connect
   | SetPassword String
   | SelectConfig
-  | SelectRuleVideoRender VideoState
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
@@ -340,8 +339,7 @@ displayVideoRule videoState =
   case videoState of 
     VideoState sourceName render ->
       td []
-        [ a [ href "#", onClick (SelectRuleVideoRender videoState) ]
-          [ renderStatus render ]
+        [ renderStatus render
         , text " "
         , text sourceName
         ]
