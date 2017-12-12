@@ -1,9 +1,23 @@
-module RuleSet.Decode exposing (audioRule, audioState)
+module RuleSet.Decode exposing (videoState, audioRule, audioState)
 
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Operator(..))
 import OBSWebSocket.Data exposing (Render(..), Audio(..))
 
 import Json.Decode exposing (..)
+
+videoState : Decoder VideoState
+videoState =
+  map2 VideoState
+    (index 0 string)
+    (index 1 render)
+
+render : Decoder Render
+render =
+  string |> andThen (\s -> case s of
+    "Visible" -> succeed Visible
+    "Hidden" -> succeed Hidden
+    _ -> fail "Unknown render status"
+  )
 
 audioRule : Decoder AudioRule
 audioRule =

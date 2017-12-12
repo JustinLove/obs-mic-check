@@ -72,6 +72,10 @@ all = describe "rules"
         RuleSet.Encode.audioRule
         RuleSet.Decode.audioRule
         defaultMuted
+    , it "round trips VideoState" <| roundTrips
+        RuleSet.Encode.videoState
+        RuleSet.Decode.videoState
+        (VideoState "name" Visible)
     ]
   ]
 
