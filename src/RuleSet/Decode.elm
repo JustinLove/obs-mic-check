@@ -1,9 +1,21 @@
-module RuleSet.Decode exposing (videoState, audioRule, audioState)
+module RuleSet.Decode exposing (ruleSet, videoState, audioRule, audioState)
 
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Operator(..))
 import OBSWebSocket.Data exposing (Render(..), Audio(..))
 
 import Json.Decode exposing (..)
+
+ruleSet : Decoder RuleSet
+ruleSet =
+  map2 RuleSet
+    (field "default" audioRule)
+    (field "rules" <| list alarmRule)
+
+alarmRule : Decoder (VideoState, AudioRule)
+alarmRule =
+  map2 (,)
+    (index 0 videoState)
+    (index 1 audioRule)
 
 videoState : Decoder VideoState
 videoState =

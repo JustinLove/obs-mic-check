@@ -76,6 +76,10 @@ all = describe "rules"
         RuleSet.Encode.videoState
         RuleSet.Decode.videoState
         (VideoState "name" Visible)
+    , it "round trips RuleSet" <| roundTrips
+        RuleSet.Encode.ruleSet
+        RuleSet.Decode.ruleSet
+        basicRules
     ]
   ]
 
