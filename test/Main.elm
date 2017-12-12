@@ -53,6 +53,9 @@ all = describe "rules"
     [ it "encodes AudioState" <| eql
         """["name","Live"]"""
         (RuleSet.Encode.audioState (AudioState "name" Live) |> Json.Encode.encode 0)
+    , it "encodes AudioRule" <| eql
+        audioRuleJson
+        (RuleSet.Encode.audioRule defaultMuted |> Json.Encode.encode 2)
     ]
   ]
 
@@ -104,3 +107,15 @@ mic name audio =
 alarmRaised sources ruleSet =
   activeAudioRule sources ruleSet
     |> (\audioRule -> checkAudioRule sources audioRule)
+
+audioRuleJson = """{
+  "operator": "Any",
+  "audioStates": [
+    [
+      "Podcaster - audio",
+      "Muted"
+    ]
+  ],
+  "timeout": 0
+}"""
+
