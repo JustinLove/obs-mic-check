@@ -1,4 +1,5 @@
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), activeAudioRule, checkAudioRule)
+import RuleSet.Encode
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 
 import Expectation exposing (eql, isTrue, isFalse)
@@ -6,6 +7,7 @@ import Test exposing (it, describe, Test)
 import Runner exposing (runAll)
 
 import Html exposing (Html)
+import Json.Encode
 
 main : Html msg
 main =
@@ -46,6 +48,11 @@ all = describe "rules"
       isTrue <| alarmRaised [ brb Hidden, podcaster Muted, stepmania Muted ] multiMicRules
     , it "hidden, only one muted mic present" <|
       isTrue <| alarmRaised [ brb Hidden, podcaster Muted ] multiMicRules
+    ]
+  , describe "state encoding"
+    [ it "encodes AudioState" <| eql
+        """["name","Live"]"""
+        (RuleSet.Encode.audioState (AudioState "name" Live) |> Json.Encode.encode 0)
     ]
   ]
 
