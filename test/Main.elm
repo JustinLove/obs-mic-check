@@ -1,5 +1,6 @@
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), activeAudioRule, checkAudioRule)
 import RuleSet.Encode
+import RuleSet.Decode
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
 
 import Expectation exposing (eql, isTrue, isFalse)
@@ -8,6 +9,7 @@ import Runner exposing (runAll)
 
 import Html exposing (Html)
 import Json.Encode
+import Json.Decode
 
 main : Html msg
 main =
@@ -62,6 +64,11 @@ all = describe "rules"
     , it "encodes RuleSet" <| eql
         basicRulesJson
         (RuleSet.Encode.ruleSet basicRules |> Json.Encode.encode 2)
+    , it "round trips AudioState" <| eql
+        (Ok (AudioState "name" Live))
+        ((AudioState "name" Live)
+          |> RuleSet.Encode.audioState
+          |> Json.Decode.decodeValue RuleSet.Decode.audioState)
     ]
   ]
 
