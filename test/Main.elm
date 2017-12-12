@@ -59,8 +59,12 @@ all = describe "rules"
     , it "encodes VideoState" <| eql
         """["name","Visible"]"""
         (RuleSet.Encode.videoState (VideoState "name" Visible) |> Json.Encode.encode 0)
+    , it "encodes RuleSet" <| eql
+        basicRulesJson
+        (RuleSet.Encode.ruleSet basicRules |> Json.Encode.encode 2)
     ]
   ]
+
 
 brb = layer "BRB - text 2"
 starting = layer "Starting soon - text"
@@ -122,3 +126,57 @@ audioRuleJson = """{
   "timeout": 0
 }"""
 
+basicRulesJson = """{
+  "default": {
+    "operator": "Any",
+    "audioStates": [
+      [
+        "Podcaster - audio",
+        "Muted"
+      ]
+    ],
+    "timeout": 0
+  },
+  "rules": [
+    [
+      [
+        "BRB - text 2",
+        "Visible"
+      ],
+      {
+        "operator": "Any",
+        "audioStates": [
+          [
+            "Podcaster - audio",
+            "Live"
+          ],
+          [
+            "Podcaster - Stepmania",
+            "Live"
+          ]
+        ],
+        "timeout": 0
+      }
+    ],
+    [
+      [
+        "Starting soon - text",
+        "Visible"
+      ],
+      {
+        "operator": "Any",
+        "audioStates": [
+          [
+            "Podcaster - audio",
+            "Live"
+          ],
+          [
+            "Podcaster - Stepmania",
+            "Live"
+          ]
+        ],
+        "timeout": 0
+      }
+    ]
+  ]
+}"""
