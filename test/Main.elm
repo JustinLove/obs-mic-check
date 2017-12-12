@@ -68,6 +68,10 @@ all = describe "rules"
         RuleSet.Encode.audioState
         RuleSet.Decode.audioState
         (AudioState "name" Live)
+    , it "round trips AudioRule" <| roundTrips
+        RuleSet.Encode.audioRule
+        RuleSet.Decode.audioRule
+        defaultMuted
     ]
   ]
 
