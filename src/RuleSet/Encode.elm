@@ -1,9 +1,13 @@
-module RuleSet.Encode exposing (audioRule, audioState)
+module RuleSet.Encode exposing (videoState, audioRule, audioState)
 
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), AudioState(..), Operator(..))
 import OBSWebSocket.Data exposing (Render(..), Audio(..))
 
 import Json.Encode exposing (..)
+
+videoState : VideoState -> Value
+videoState (VideoState sourceName render) =
+  list [ string sourceName, string <| toString render ]
 
 audioRule : AudioRule -> Value
 audioRule (AudioRule operator audioStates timeout) =

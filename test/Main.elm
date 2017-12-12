@@ -56,6 +56,9 @@ all = describe "rules"
     , it "encodes AudioRule" <| eql
         audioRuleJson
         (RuleSet.Encode.audioRule defaultMuted |> Json.Encode.encode 2)
+    , it "encodes VideoState" <| eql
+        """["name","Visible"]"""
+        (RuleSet.Encode.videoState (VideoState "name" Visible) |> Json.Encode.encode 0)
     ]
   ]
 
