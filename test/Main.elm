@@ -64,11 +64,10 @@ all = describe "rules"
     , it "encodes RuleSet" <| eql
         basicRulesJson
         (RuleSet.Encode.ruleSet basicRules |> Json.Encode.encode 2)
-    , it "round trips AudioState" <| eql
-        (Ok (AudioState "name" Live))
-        ((AudioState "name" Live)
-          |> RuleSet.Encode.audioState
-          |> Json.Decode.decodeValue RuleSet.Decode.audioState)
+    , it "round trips AudioState" <| roundTrips
+        RuleSet.Encode.audioState
+        RuleSet.Decode.audioState
+        (AudioState "name" Live)
     ]
   ]
 
@@ -121,6 +120,12 @@ mic name audio =
 alarmRaised sources ruleSet =
   activeAudioRule sources ruleSet
     |> (\audioRule -> checkAudioRule sources audioRule)
+
+roundTrips : (a -> Json.Encode.Value) -> Json.Decode.Decoder a -> a -> Expectation.Expectation
+roundTrips encoder decoder value =
+  eql
+    (Ok value)
+    (value |> encoder |> Json.Decode.decodeValue decoder)
 
 audioRuleJson = """{
   "operator": "Any",
