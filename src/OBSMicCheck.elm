@@ -1,5 +1,6 @@
 module OBSMicCheck exposing (..)
 
+import Harbor exposing (..)
 import View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
@@ -8,6 +9,8 @@ import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Special
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..))
+import RuleSet.Encode
+import RuleSet.Decode
 
 import Html
 import WebSocket
@@ -73,27 +76,23 @@ makeModel =
     Dict.empty
     defaultAudio
     Silent
-    ( RuleSet.empty defaultAudio
-      |> RuleSet.insert 
-        (VideoState "BRB - text 2" Visible) 
-        (AudioRule Any (allMics Live) 5)
-      |> RuleSet.insert 
-        (VideoState "Starting soon - text" Visible) 
-        (AudioRule Any (allMics Live) 5)
-      |> RuleSet.insert 
-        (VideoState "Stream over - text" Visible) 
-        (AudioRule Any (allMics Live) (5 * 60))
-    )
+    ( RuleSet.empty defaultAudio )
 
 -- UPDATE
 
 type Msg
-  = OBS (Result String Message)
+  = Loaded (Result String RuleSet)
+  | OBS (Result String Message)
   | View ViewMsg
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    Loaded (Ok ruleSet) ->
+      ({model | ruleSet = ruleSet}, Cmd.none)
+    Loaded (Err message) ->
+      let _ = Debug.log "load error" message in
+      (model, Cmd.none)
     OBS (Ok (Response id response)) ->
       updateResponse response model
     OBS (Ok (Event event)) ->
@@ -117,11 +116,12 @@ update msg model =
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->
+          let ruleSet = RuleSet.insert (VideoState source Visible) audioRule model.ruleSet in
           ( updateActive { model
-            | ruleSet = RuleSet.insert (VideoState source Visible) audioRule model.ruleSet
+            | ruleSet = ruleSet
             , appMode = Status
             }
-          , Cmd.none)
+          , saveRules ruleSet)
         _ -> (model, Cmd.none)
     View (SelectRuleAudioRule key) ->
       case key of
@@ -161,21 +161,25 @@ update msg model =
     View (SelectAudioMode operator) ->
       case model.appMode of
         SelectAudio ruleKey _ audioStates ->
-          ( updateActive { model
-            | ruleSet = mapRuleValue ruleKey
+          let
+            ruleSet = mapRuleValue ruleKey
               (\(AudioRule _ _ timeout) -> AudioRule operator audioStates timeout)
               model.ruleSet
+          in
+          ( updateActive { model
+            | ruleSet = ruleSet
             , appMode = Status
             }
-          , Cmd.none)
+          , saveRules ruleSet)
         _ -> (model, Cmd.none)
     View (SetTimeout ruleKey timeout) ->
-      ( updateActive { model
-        | ruleSet = mapRuleValue ruleKey
+      let
+        ruleSet = mapRuleValue ruleKey
           (\(AudioRule operator state _) -> AudioRule operator state timeout)
           model.ruleSet
-        }
-      , Cmd.none)
+      in
+      ( updateActive { model | ruleSet = ruleSet }
+      , saveRules ruleSet)
     View (CopyRule key) ->
       case key of
         VideoKey videoState ->
@@ -189,8 +193,9 @@ update msg model =
           ( {model | appMode = SelectVideo (RuleSet.default model.ruleSet) }
           , Cmd.none)
     View (RemoveRule videoState) ->
-      ( {model | ruleSet = RuleSet.remove videoState model.ruleSet}
-      , Cmd.none)
+      let ruleSet = RuleSet.remove videoState model.ruleSet in
+      ( updateActive {model | ruleSet = ruleSet}
+      , saveRules ruleSet)
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
@@ -428,11 +433,21 @@ obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =
   WebSocket.send obsAddress (Json.Encode.encode 0 message)
 
+saveRules : RuleSet -> Cmd Msg
+saveRules ruleSet =
+  ruleSet
+    |> RuleSet.Encode.ruleSet
+    |> Json.Encode.encode 0
+    |> save
+
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  WebSocket.listen obsAddress receiveMessage
+  Sub.batch 
+    [ WebSocket.listen obsAddress receiveMessage
+    , loaded (Loaded << Json.Decode.decodeString RuleSet.Decode.ruleSet)
+    ]
 
 receiveMessage : String -> Msg
 receiveMessage =
