@@ -34,16 +34,20 @@ type ConnectionStatus
  | Authenticated String
 
 type alias Model =
+  -- application state (transient)
   { connected : ConnectionStatus
-  , time : Int
   , password : String
+  , appMode : AppMode
+  -- obs state (transient)
+  , time : Int
   , currentScene : Scene
   , specialSources : SpecialSources
   , allSources : Dict String Source
-  , ruleSet : RuleSet
+  -- derived state (transient)
   , activeAudioRule : AudioRule
   , alarm : Alarm
-  , appMode : AppMode
+  -- rules/config (transient)
+  , ruleSet : RuleSet
   }
 
 init : (Model, Cmd Msg)
@@ -61,11 +65,14 @@ makeModel : Model
 makeModel =
   Model
     NotConnected
-    0
     ""
+    Status
+    0
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
     Dict.empty
+    defaultAudio
+    Silent
     ( RuleSet.empty defaultAudio
       |> RuleSet.insert 
         (VideoState "BRB - text 2" Visible) 
@@ -77,9 +84,6 @@ makeModel =
         (VideoState "Stream over - text" Visible) 
         (AudioRule Any (allMics Live) (5 * 60))
     )
-    defaultAudio
-    Silent
-    Status
 
 -- UPDATE
 
