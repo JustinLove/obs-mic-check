@@ -113,6 +113,8 @@ update msg model =
         }
       , Cmd.none
       )
+    View Cancel ->
+      ( { model | appMode = Status }, Cmd.none )
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->

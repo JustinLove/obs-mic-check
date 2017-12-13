@@ -15,6 +15,7 @@ type ViewMsg
   | Connect
   | SetPassword String
   | SelectConfig
+  | Cancel
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
@@ -133,6 +134,7 @@ displaySelectVideo model =
   let scene = model.currentScene in
   div [ id "select-video" ]
     [ h2 [] [ text scene.name ]
+    , button [ onClick Cancel ] [ text "Cancel" ]
     , table [ class "source-list" ]
       <| List.map (displaySourceForSelect SelectVideoSource)
       <| List.filter (noCurrentRule model.ruleSet)
