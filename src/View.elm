@@ -40,7 +40,8 @@ css = """
 .audio.muted { color: white; background-color: red; }
 .hidden { opacity: 0.5; }
 .alarms { background-color: #FBB; }
-.active { background-color: #FFB; }
+.active { background-color: #BFB; }
+.violation { background-color: #FFB; }
 #status { display: none; }
 #config { display: none; }
 .mode-status #status { display: block; }
@@ -205,12 +206,20 @@ alarmTime max val =
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources ruleSet =
+  let videoState = RuleSet.activeVideoState sources ruleSet in
   div []
     [ ruleSet
       |> RuleSet.toList
-      |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
+      |> List.map (\rule -> displayRule
+          ((Just (Tuple.first rule)) == videoState)
+          (checkRule sources rule)
+          rule
+        )
       |> (flip List.append)
-        [ displayDefaultRule (checkAudioRule sources (RuleSet.default ruleSet)) (RuleSet.default ruleSet) ]
+        [ displayDefaultRule
+          (Nothing == videoState)
+          ((Nothing == videoState) && (checkAudioRule sources (RuleSet.default ruleSet)))
+          (RuleSet.default ruleSet) ]
       |> List.append
         [ th [] [ text "Video Source" ]
         , th [] [ text "Audio Status" ]
@@ -260,7 +269,7 @@ displaySource ruleSet source =
     , ruleSet
       |> RuleSet.toList
       |> List.filter (\((VideoState name _), _) -> name == source.name)
-      |> List.map (displayRule False)
+      |> List.map (displayRule False False)
       |> table [ class "rules" ]
     ]
 
@@ -326,16 +335,24 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
-displayRule : Bool -> (VideoState, AudioRule) -> Html ViewMsg
-displayRule active (video, audio) =
-  tr [ classList [ ("active", active) ] ]
+displayRule : Bool -> Bool -> (VideoState, AudioRule) -> Html ViewMsg
+displayRule active violation (video, audio) =
+  tr [ classList
+       [ ("active", active)
+       , ("violation", violation)
+       ]
+     ]
     <| List.append
       [ (displayVideoRule video) ]
       (displayAudioRule (VideoKey video) audio)
 
-displayDefaultRule : Bool -> AudioRule -> Html ViewMsg
-displayDefaultRule active audioRule =
-  tr [ classList [ ("active", active) ] ]
+displayDefaultRule : Bool -> Bool -> AudioRule -> Html ViewMsg
+displayDefaultRule active violation audioRule =
+  tr [ classList
+       [ ("active", active)
+       , ("violation", violation)
+       ]
+     ]
     <| List.append
       [ td [] [ text "default " ] ]
       (displayAudioRule DefaultKey audioRule)

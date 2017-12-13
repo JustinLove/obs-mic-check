@@ -6,6 +6,7 @@ module RuleSet exposing
   , AudioState(..)
   , Alarm(..)
   , activeAudioRule
+  , activeVideoState
   , audioSourceNames
   , checkVideoState
   , checkAudioRule
@@ -55,6 +56,16 @@ activeAudioRule sources ruleSet =
         |> List.filterMap (\vs -> get vs ruleSet)
         |> List.head
         |> Maybe.withDefault default
+
+activeVideoState : List Source -> RuleSet -> Maybe VideoState
+activeVideoState sources ruleSet =
+  let keys = videoStates ruleSet in
+  case ruleSet of
+    RuleSet default rules ->
+      sources
+        |> List.map (\source -> VideoState source.name source.render)
+        |> List.filter (\vs -> List.member vs keys)
+        |> List.head
 
 audioSourceNames : RuleSet -> List String
 audioSourceNames ruleSet =
