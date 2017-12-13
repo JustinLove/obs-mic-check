@@ -279,6 +279,7 @@ authenticatedStatus connected =
       Authenticated version 
     Authenticated version->
       Authenticated version 
+
 setRender : Scene -> String -> Render -> Scene
 setRender scene sourceName render =
   { scene | sources =
