@@ -35,8 +35,8 @@ type AppMode
 
 type ConnectionStatus
  = Disconnected
- | Connecting
- | Connected String
+ | Connecting String
+ | Connected String String
  | Authenticated String
 
 -- VIEW
@@ -58,7 +58,7 @@ view model =
 
 displayHeader model =
   header []
-    [ displayConnectionStatus model.password model.connected
+    [ displayConnectionStatus model.connected
     , if alarming model.alarm then
         audio
           [ autoplay True
@@ -150,18 +150,18 @@ alarmTime max val =
     , text <| toString val
     ]
 
-displayConnectionStatus : String -> ConnectionStatus -> Html ViewMsg
-displayConnectionStatus password connected =
+displayConnectionStatus : ConnectionStatus -> Html ViewMsg
+displayConnectionStatus connected =
   case connected of
     Disconnected ->
       input
         [ type_ "password"
         , on "change" <| targetValue Json.Decode.string SetPassword
         , placeholder "OBS Websockets password"
-        ] [ text password ]
-    Connecting ->
+        ] []
+    Connecting _ ->
       span [ class "connecting" ] [ text "Connecting" ]
-    Connected version->
+    Connected _ version->
       span [ class "connected" ]
         [ text ("Connected (not authenticated) OBS v" ++ version)
         , button [ onClick LogOut ] [ text "log out" ]

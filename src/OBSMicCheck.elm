@@ -34,7 +34,6 @@ main =
 type alias Model =
   -- application state (transient)
   { connected : ConnectionStatus
-  , password : String
   , appMode : AppMode
   -- obs state (transient)
   , time : Int
@@ -63,7 +62,6 @@ makeModel : Model
 makeModel =
   Model
     Disconnected
-    ""
     Status
     0
     { name = "-", sources = []}
@@ -98,7 +96,7 @@ update msg model =
     View (None) ->
       (model, Cmd.none)
     View (SetPassword word) ->
-      ( {model | password = word, connected = Connecting }
+      ( {model | connected = Connecting word }
       , attemptToConnect)
     View LogOut -> 
       ( { makeModel | ruleSet = model.ruleSet }, Cmd.none )
@@ -192,13 +190,22 @@ updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
   case response of
     Response.GetVersion version ->
-      ( { model | connected = Connected version.obsWebsocketVersion}
+      ( { model | connected = connectedStatus version.obsWebsocketVersion model.connected}
       , obsSend <| Request.getAuthRequired
       )
     Response.AuthRequired challenge ->
-      ( model
-      , obsSend <| Request.authenticate (OBSWebSocket.authenticate model.password challenge.salt challenge.challenge)
-      )
+      case model.connected of
+        Connecting password ->
+          ( model
+          , obsSend <| Request.authenticate
+            (OBSWebSocket.authenticate password challenge.salt challenge.challenge)
+          )
+        Connected password _ ->
+          ( model
+          , obsSend <| Request.authenticate
+            (OBSWebSocket.authenticate password challenge.salt challenge.challenge)
+          )
+        _ -> (model, Cmd.none)
     Response.AuthNotRequired ->
       authenticated model
     Response.Authenticate True ->
@@ -275,12 +282,24 @@ authenticatedStatus connected =
   case connected of
     Disconnected ->
       Authenticated "-"
-    Connecting ->
+    Connecting _ ->
       Authenticated "-"
-    Connected version->
+    Connected _ version->
       Authenticated version 
     Authenticated version->
       Authenticated version 
+
+connectedStatus : String -> ConnectionStatus -> ConnectionStatus
+connectedStatus version connected =
+  case connected of
+    Disconnected ->
+      Connected "" version
+    Connecting password ->
+      Connected password version
+    Connected password _ ->
+      Connected password version
+    Authenticated _->
+      Connected "" version
 
 setRender : Scene -> String -> Render -> Scene
 setRender scene sourceName render =
