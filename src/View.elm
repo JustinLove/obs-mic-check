@@ -13,6 +13,7 @@ import Regex exposing (regex)
 type ViewMsg
   = None
   | SetPassword String
+  | LogOut
   | Cancel
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
@@ -101,11 +102,7 @@ view model =
 
 displayHeader model =
   header []
-    [ input
-      [ type_ "password"
-      , on "change" <| targetValue Json.Decode.string SetPassword
-      ] []
-    , text <| toString model.connected
+    [ displayConnectionStatus model.password model.connected
     , if alarming model.alarm then
         audio
           [ autoplay True
@@ -196,6 +193,25 @@ alarmTime max val =
     , text " "
     , text <| toString val
     ]
+
+displayConnectionStatus : String -> ConnectionStatus -> Html ViewMsg
+displayConnectionStatus password connected =
+  case connected of
+    NotConnected ->
+      input
+        [ type_ "password"
+        , on "change" <| targetValue Json.Decode.string SetPassword
+        ] [ text password ]
+    Connected version->
+      span [ class "connected" ]
+        [ text ("Connected OBS v" ++ version)
+        , button [ onClick LogOut ] [ text "log out" ]
+        ]
+    Authenticated version->
+      span [ class "authenticated" ]
+        [ text ("Authenticated OBS v" ++ version)
+        , button [ onClick LogOut ] [ text "log out" ]
+        ]
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources ruleSet =

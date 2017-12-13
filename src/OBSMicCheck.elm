@@ -99,6 +99,8 @@ update msg model =
       (model, Cmd.none)
     View (SetPassword word) ->
       ({model | password = word}, attemptToConnect)
+    View LogOut -> 
+      ( { makeModel | ruleSet = model.ruleSet }, Cmd.none )
     View Cancel ->
       ( { model | appMode = Status }, Cmd.none )
     View (SelectVideoSource source) ->
