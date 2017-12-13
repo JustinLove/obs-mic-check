@@ -104,8 +104,6 @@ update msg model =
       (model, Cmd.none)
     View (SetPassword word) ->
       ({model | password = word}, attemptToConnect)
-    View Connect ->
-      (model, attemptToConnect)
     View Cancel ->
       ( { model | appMode = Status }, Cmd.none )
     View (SelectVideoSource source) ->

@@ -12,7 +12,6 @@ import Regex exposing (regex)
 
 type ViewMsg
   = None
-  | Connect
   | SetPassword String
   | Cancel
   | SelectVideoSource String
@@ -101,7 +100,6 @@ displayHeader model =
       [ type_ "password"
       , on "change" <| targetValue Json.Decode.string SetPassword
       ] []
-    , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
     , if alarming model.alarm then
         audio
