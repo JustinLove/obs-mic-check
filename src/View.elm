@@ -14,7 +14,6 @@ type ViewMsg
   = None
   | Connect
   | SetPassword String
-  | SelectConfig
   | Cancel
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
@@ -31,7 +30,6 @@ type RuleKey
 
 type AppMode
   = Status
-  | Config
   | SelectVideo AudioRule
   | SelectAudio RuleKey Operator (List AudioState)
 
@@ -44,9 +42,7 @@ css = """
 .active { background-color: #BFB; }
 .violation { background-color: #FFB; }
 #status { display: none; }
-#config { display: none; }
 .mode-status #status { display: block; }
-.mode-config #config { display: block; }
 .audio-mode { width: 10em; height: 2em; }
 .current-mode { background-color: #bbf; }
 
@@ -89,14 +85,12 @@ view model =
     [ classList
       [ ("alarms", alarming model.alarm)
       , ("mode-status", model.appMode == Status)
-      , ("mode-config", model.appMode == Config)
       ]
     ]
     [ node "style" [] [ text css ]
     , displayHeader model
     , case model.appMode of
         Status -> displayStatus model
-        Config -> displayConfig model
         SelectVideo _ -> displaySelectVideo model
         SelectAudio _ operator audioStates -> displaySelectAudio model operator audioStates
     ]
@@ -109,7 +103,6 @@ displayHeader model =
       ] []
     , button [ onClick Connect ] [ text "Connect" ]
     , text <| toString model.connected
-    , modeControl (model.appMode /= Status)
     , if alarming model.alarm then
         audio
           [ autoplay True
@@ -123,11 +116,6 @@ displayStatus model =
   div [ id "status" ]
     [ violated model.time model.alarm model.activeAudioRule
     , displayRuleSet model.currentScene.sources model.ruleSet
-    ]
-
-displayConfig model =
-  div [ id "config" ]
-    [ displayScene model.ruleSet model.currentScene
     ]
 
 displaySelectVideo model =
@@ -242,38 +230,6 @@ alarming alarm =
     Silent -> False
     Violation _ -> False
     Alarming _ -> True
-
-displayScene : RuleSet -> Scene -> Html ViewMsg
-displayScene ruleSet scene =
-  div []
-    [ h2 [] [ text scene.name ]
-    , ul [] <| List.map (displaySource ruleSet) scene.sources
-    ]
-
-displaySource : RuleSet -> Source -> Html ViewMsg
-displaySource ruleSet source =
-  li
-    [ classList 
-      [ ("hidden", source.render == Hidden)
-      , ("visible", source.render == Visible)
-      , ("source", True)
-      ]
-    ]
-    [ h3 []
-      [ renderStatus source.render
-      , text " "
-      , audioStatus source.audio
-      , text " "
-      , text source.name
-      , text " "
-      , em [] [ text source.type_ ]
-      ]
-    , ruleSet
-      |> RuleSet.toList
-      |> List.filter (\((VideoState name _), _) -> name == source.name)
-      |> List.map (displayRule False False)
-      |> table [ class "rules" ]
-    ]
 
 displaySourceForSelect : (String -> ViewMsg) -> Source -> Html ViewMsg
 displaySourceForSelect tagger source =
@@ -403,20 +359,6 @@ displayAudioState (AudioState sourceName audio) =
     [ text sourceName
     , text " "
     , audioStatus audio
-    ]
-
-modeControl : Bool -> Html ViewMsg
-modeControl isChecked =
-  span []
-    [ input
-      [ type_ "checkbox"
-      , Html.Attributes.name "Config"
-      , id "app-mode"
-      , value "config"
-      , onCheck (\_ -> SelectConfig)
-      , checked isChecked
-      ] []
-    , label [ for "app-mode" ] [text "Config" ]
     ]
 
 audioGroup : String -> Bool -> ViewMsg -> Html ViewMsg
