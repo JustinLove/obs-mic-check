@@ -41,50 +41,6 @@ type ConnectionStatus
 
 -- VIEW
 
-css = """
-.audio.muted { color: white; background-color: red; }
-.hidden { opacity: 0.5; }
-.alarms { background-color: #FBB; }
-.active { background-color: #BFB; }
-.violation { background-color: #FFB; }
-#status { display: none; }
-.mode-status #status { display: block; }
-.audio-mode { width: 10em; height: 2em; }
-.current-mode { background-color: #bbf; }
-
-.rules { border: solid #aaa 1px; border-collapse: collapse;}
-.rules td, .rules th {
-  border-top: solid #aaa 1px;
-  border-bottom: solid #aaa 1px;
-  border-left: dashed #eee 1px;
-  border-right: dashed #eee 1px;
-  padding-left: 1em;
-  padding-right: 1em;
-}
-.rules ul { margin: 0; padding: 0; text-align: left; list-style-type: none;}
-
-.timeout { width: 4em; }
-
-.source-list { border: solid #aaa 1px; border-collapse: collapse;}
-.source-list td, .source-list th {
-  border-top: solid #aaa 1px;
-  border-bottom: solid #aaa 1px;
-  border-left: dashed #eee 1px;
-  border-right: dashed #eee 1px;
-  padding-left: 1em;
-  padding-right: 1em;
-}
-.source-list .icon {
-  border-left: none;
-  border-right: none;
-  padding: 0.2em;
-}
-.source-list .icon + td {
-  border-left: none;
-  padding-left: 0.2em;
-}
-"""
-
 -- view : Model -> Html ViewMsg
 view model =
   div
@@ -93,8 +49,7 @@ view model =
       , ("mode-status", model.appMode == Status)
       ]
     ]
-    [ node "style" [] [ text css ]
-    , displayHeader model
+    [ displayHeader model
     , case model.appMode of
         Status -> displayStatus model
         SelectVideo _ -> displaySelectVideo model
