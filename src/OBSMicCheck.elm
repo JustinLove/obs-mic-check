@@ -1,7 +1,7 @@
 module OBSMicCheck exposing (..)
 
 import Harbor exposing (..)
-import View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..))
+import View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionStatus(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
@@ -30,11 +30,6 @@ main =
     }
 
 -- MODEL
-
-type ConnectionStatus
- = NotConnected
- | Connected String
- | Authenticated String
 
 type alias Model =
   -- application state (transient)

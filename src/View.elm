@@ -1,4 +1,4 @@
-module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..))
+module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionStatus(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
@@ -31,6 +31,11 @@ type AppMode
   = Status
   | SelectVideo AudioRule
   | SelectAudio RuleKey Operator (List AudioState)
+
+type ConnectionStatus
+ = NotConnected
+ | Connected String
+ | Authenticated String
 
 -- VIEW
 
