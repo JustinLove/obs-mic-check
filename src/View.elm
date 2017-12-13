@@ -61,7 +61,7 @@ css = """
   padding-left: 1em;
   padding-right: 1em;
 }
-.rules ul { margin: 0; }
+.rules ul { margin: 0; padding: 0; text-align: left; list-style-type: none;}
 
 .timeout { width: 4em; }
 
@@ -351,11 +351,14 @@ displayVideoRule videoState =
 displayAudioRule : RuleKey -> AudioRule -> List (Html ViewMsg)
 displayAudioRule key (AudioRule operator states timeout) =
   [ td
-    [ onClick <| SelectRuleAudioRule key ]
-    [ text <| toString operator
-    , ul []
-      <| List.map (\e -> li [] [e])
-      <| List.map displayAudioState states
+    []
+    [ button
+      [ onClick <| SelectRuleAudioRule key ]
+      [ text <| toString operator
+      , ul []
+        <| List.map (\e -> li [] [e])
+        <| List.map displayAudioState states
+      ]
     ]
   , td []
     [ input
@@ -366,12 +369,12 @@ displayAudioRule key (AudioRule operator states timeout) =
       , class "timeout"
       ] []
     ]
-  , td [ onClick (CopyRule key) ]
-    [ text "Copy" ]
+  , td []
+    [ button [ onClick (CopyRule key) ] [ text "Copy" ] ]
   , case key of
     VideoKey videoState ->
-      td [ onClick (RemoveRule videoState) ]
-        [ text "X" ]
+      td []
+        [ button [ onClick (RemoveRule videoState) ] [ text "X" ] ]
     DefaultKey ->
       td [] []
   ]
