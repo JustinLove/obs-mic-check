@@ -116,12 +116,12 @@ update msg model =
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->
-          let ruleSet = RuleSet.insert (VideoState source Visible) audioRule model.ruleSet in
-          ( updateActive { model
-            | ruleSet = ruleSet
-            , appMode = Status
-            }
-          , saveRules ruleSet)
+          { model
+          | ruleSet = RuleSet.insert (VideoState source Visible) audioRule model.ruleSet
+          , appMode = Status
+          }
+            |> updateActive
+            |> persist
         _ -> (model, Cmd.none)
     View (SelectRuleAudioRule key) ->
       case key of
@@ -161,25 +161,23 @@ update msg model =
     View (SelectAudioMode operator) ->
       case model.appMode of
         SelectAudio ruleKey _ audioStates ->
-          let
-            ruleSet = mapRuleValue ruleKey
-              (\(AudioRule _ _ timeout) -> AudioRule operator audioStates timeout)
-              model.ruleSet
-          in
-          ( updateActive { model
-            | ruleSet = ruleSet
-            , appMode = Status
-            }
-          , saveRules ruleSet)
+          { model
+          | ruleSet = mapRuleValue ruleKey
+            (\(AudioRule _ _ timeout) -> AudioRule operator audioStates timeout)
+            model.ruleSet
+          , appMode = Status
+          }
+            |> updateActive
+            |> persist
         _ -> (model, Cmd.none)
     View (SetTimeout ruleKey timeout) ->
-      let
-        ruleSet = mapRuleValue ruleKey
-          (\(AudioRule operator state _) -> AudioRule operator state timeout)
-          model.ruleSet
-      in
-      ( updateActive { model | ruleSet = ruleSet }
-      , saveRules ruleSet)
+      { model
+      | ruleSet = mapRuleValue ruleKey
+        (\(AudioRule operator state _) -> AudioRule operator state timeout)
+        model.ruleSet
+      }
+      |> updateActive
+      |> persist
     View (CopyRule key) ->
       case key of
         VideoKey videoState ->
@@ -193,9 +191,11 @@ update msg model =
           ( {model | appMode = SelectVideo (RuleSet.default model.ruleSet) }
           , Cmd.none)
     View (RemoveRule videoState) ->
-      let ruleSet = RuleSet.remove videoState model.ruleSet in
-      ( updateActive {model | ruleSet = ruleSet}
-      , saveRules ruleSet)
+      { model
+      | ruleSet = RuleSet.remove videoState model.ruleSet
+      }
+        |> updateActive
+        |> persist
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
@@ -367,6 +367,10 @@ updateActive model =
       else
         Silent
   }
+
+persist : Model -> (Model, Cmd Msg)
+persist model =
+  (model, saveRules model.ruleSet)
 
 checkAlarms : Model -> Model
 checkAlarms model =
