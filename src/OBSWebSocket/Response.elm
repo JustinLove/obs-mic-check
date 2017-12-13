@@ -16,15 +16,17 @@ type ResponseData
 
 response : Decoder ResponseData
 response =
-  oneOf
-    [ getVersion
-    , getAuthRequired
-    , authenticate
-    , currentScene
-    , sceneList
-    , getMuted
-    , getSpecialSources
-    ]
+  (field "message-id" string)
+  |> andThen (\messageId -> case messageId of
+    "GetVersion" -> getVersion
+    "GetAuthRequired" -> getAuthRequired
+    "Authenticate" -> authenticate
+    "GetCurrentScene" -> currentScene
+    "GetSceneList" -> sceneList
+    "GetMute" -> getMuted
+    "GetSpecialSources" -> getSpecialSources
+    _ -> fail "Not a known response type"
+  )
 
 getVersion : Decoder ResponseData
 getVersion =
