@@ -8,7 +8,7 @@ type ResponseData
   = GetVersion Version
   | AuthRequired Challenge
   | AuthNotRequired
-  | Authenticate
+  | Authenticate Bool
   | CurrentScene Scene
   | SceneList String (List Scene)
   | GetMuted String Audio
@@ -56,8 +56,8 @@ authenticate =
     (field "message-id" string)
     (field "status" string)
   |> andThen (\(id, status) -> case (id, status) of
-      ("Authenticate", "ok") -> succeed Authenticate
-      ("Authenticate", "error") -> fail "Authentication failed"
+      ("Authenticate", "ok") -> succeed (Authenticate True)
+      ("Authenticate", "error") -> succeed (Authenticate False)
       _ -> fail "Decoder does not apply"
     )
 

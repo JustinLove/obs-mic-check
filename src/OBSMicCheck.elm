@@ -62,7 +62,7 @@ defaultAudio = AudioRule All (allMics Muted) 5
 makeModel : Model
 makeModel =
   Model
-    NotConnected
+    Disconnected
     ""
     Status
     0
@@ -98,7 +98,8 @@ update msg model =
     View (None) ->
       (model, Cmd.none)
     View (SetPassword word) ->
-      ({model | password = word}, attemptToConnect)
+      ( {model | password = word, connected = Connecting }
+      , attemptToConnect)
     View LogOut -> 
       ( { makeModel | ruleSet = model.ruleSet }, Cmd.none )
     View Cancel ->
@@ -200,8 +201,10 @@ updateResponse response model =
       )
     Response.AuthNotRequired ->
       authenticated model
-    Response.Authenticate ->
+    Response.Authenticate True ->
       authenticated model
+    Response.Authenticate False ->
+      ( { model | connected = Disconnected }, Cmd.none)
     Response.CurrentScene scene ->
       updateSources model scene model.specialSources
     Response.SceneList currentSceneName scenes ->
@@ -236,7 +239,7 @@ updateEvent event model =
       )
     Event.StreamStatus status ->
       let _ = Debug.log "status" status in
-      if model.connected == NotConnected then
+      if model.connected == Disconnected then
         (model, attemptToConnect)
       else
         if status.streaming then
@@ -270,7 +273,9 @@ refreshScene =
 authenticatedStatus : ConnectionStatus -> ConnectionStatus
 authenticatedStatus connected =
   case connected of
-    NotConnected ->
+    Disconnected ->
+      Authenticated "-"
+    Connecting ->
       Authenticated "-"
     Connected version->
       Authenticated version 
@@ -440,7 +445,10 @@ saveRules ruleSet =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   Sub.batch 
-    [ WebSocket.listen obsAddress receiveMessage
+    [ if model.connected == Disconnected then
+        Sub.none
+      else
+        WebSocket.listen obsAddress receiveMessage
     , loaded (Loaded << Json.Decode.decodeString RuleSet.Decode.ruleSet)
     ]
 

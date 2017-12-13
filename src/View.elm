@@ -34,7 +34,8 @@ type AppMode
   | SelectAudio RuleKey Operator (List AudioState)
 
 type ConnectionStatus
- = NotConnected
+ = Disconnected
+ | Connecting
  | Connected String
  | Authenticated String
 
@@ -197,14 +198,17 @@ alarmTime max val =
 displayConnectionStatus : String -> ConnectionStatus -> Html ViewMsg
 displayConnectionStatus password connected =
   case connected of
-    NotConnected ->
+    Disconnected ->
       input
         [ type_ "password"
         , on "change" <| targetValue Json.Decode.string SetPassword
+        , placeholder "OBS Websockets password"
         ] [ text password ]
+    Connecting ->
+      span [ class "connecting" ] [ text "Connecting" ]
     Connected version->
       span [ class "connected" ]
-        [ text ("Connected OBS v" ++ version)
+        [ text ("Connected (not authenticated) OBS v" ++ version)
         , button [ onClick LogOut ] [ text "log out" ]
         ]
     Authenticated version->
