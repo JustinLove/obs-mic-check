@@ -204,12 +204,13 @@ alarmTime max val =
     ]
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
-displayRuleSet sources (RuleSet default rules) =
+displayRuleSet sources ruleSet =
   div []
-    [ rules
+    [ ruleSet
+      |> RuleSet.toList
       |> List.map (\rule -> (displayRule (checkRule sources rule) rule))
       |> (flip List.append)
-        [ displayDefaultRule (checkAudioRule sources default) default ]
+        [ displayDefaultRule (checkAudioRule sources (RuleSet.default ruleSet)) (RuleSet.default ruleSet) ]
       |> List.append
         [ th [] [ text "Video Source" ]
         , th [] [ text "Audio Status" ]
