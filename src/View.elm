@@ -6,6 +6,7 @@ import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
+import Html.Lazy exposing (lazy3)
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -178,13 +179,13 @@ displayRuleSet sources ruleSet =
   div []
     [ ruleSet
       |> RuleSet.toList
-      |> List.map (\rule -> displayRule
+      |> List.map (\rule -> lazy3 displayRule
           ((Just (Tuple.first rule)) == videoState)
           (checkRule sources rule)
           rule
         )
       |> (flip List.append)
-        [ displayDefaultRule
+        [ lazy3 displayDefaultRule
           (Nothing == videoState)
           ((Nothing == videoState) && (checkAudioRule sources (RuleSet.default ruleSet)))
           (RuleSet.default ruleSet) ]
