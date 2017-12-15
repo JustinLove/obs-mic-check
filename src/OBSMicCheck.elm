@@ -51,12 +51,7 @@ init : (Model, Cmd Msg)
 init =
   (makeModel, Cmd.none)
 
-allMics audio =
-  [ (AudioState "Podcaster - audio" audio)
-  , (AudioState "Podcaster - Stepmania" audio)
-  ]
-
-defaultAudio = AudioRule All (allMics Muted) 5
+defaultAudio = AudioRule All [(AudioState "Mic/Aux" Muted)] 5
 
 makeModel : Model
 makeModel =
