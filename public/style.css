@@ -18,6 +18,10 @@
   padding-left: 1em;
   padding-right: 1em;
 }
+.rules td.delete, .rules th.delete {
+  padding-left: 0.2em;
+  padding-right: 0.2em;
+}
 .rules ul { margin: 0; padding: 0; text-align: left; list-style-type: none;}
 
 .timeout { width: 4em; }

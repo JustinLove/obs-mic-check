@@ -217,11 +217,11 @@ displayRuleSet sources ruleSet =
           )
           (RuleSet.default ruleSet) ]
       |> List.append
-        [ th [] [ text "Video Source" ]
+        [ th [ class "delete" ] [ text "Del" ]
+        , th [] [ text "Video Source" ]
         , th [] [ text "Audio Status" ]
         , th [] [ text "Seconds" ]
         , th [] [ text "Copy" ]
-        , th [] [ text "Del" ]
         ]
       |> table [ class "rules" ]
     ]
@@ -303,14 +303,18 @@ displayRule : Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
 displayRule classes (video, audio) =
   tr [ classes ]
     <| List.append
-      [ (displayVideoRule video) ]
+      [ td [ class "delete" ] [ button [ onClick (RemoveRule video) ] [ text "X" ] ]
+      , (displayVideoRule video)
+      ]
       (displayAudioRule (VideoKey video) audio)
 
 displayDefaultRule : Attribute ViewMsg -> AudioRule -> Html ViewMsg
 displayDefaultRule classes audioRule =
   tr [ classes ]
     <| List.append
-      [ td [] [ text "default " ] ]
+      [ td [ class "delete" ] []
+      , td [] [ text "default " ]
+      ]
       (displayAudioRule DefaultKey audioRule)
 
 ruleClasses : Bool -> Bool -> Bool -> Attribute ViewMsg
@@ -354,12 +358,6 @@ displayAudioRule key (AudioRule operator states timeout) =
     ]
   , td []
     [ button [ onClick (CopyRule key) ] [ text "Copy" ] ]
-  , case key of
-    VideoKey videoState ->
-      td []
-        [ button [ onClick (RemoveRule videoState) ] [ text "X" ] ]
-    DefaultKey ->
-      td [] []
   ]
 
 displayAudioState : AudioState -> Html ViewMsg
