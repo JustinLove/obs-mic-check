@@ -60,6 +60,7 @@ view model =
 displayHeader model =
   header []
     [ displayConnectionStatus model.connected
+    , alarmStatus model
     , if alarming model.alarm then
         audio
           [ autoplay True
@@ -71,8 +72,7 @@ displayHeader model =
 
 displayStatus model =
   div [ id "status" ]
-    [ violated model.time model.alarm model.activeAudioRule
-    , displayRuleSet model.currentScene.sources model.ruleSet
+    [ displayRuleSet model.currentScene.sources model.ruleSet
     ]
 
 displaySelectVideo model =
@@ -129,6 +129,12 @@ validNumber : String -> Bool
 validNumber value =
   Regex.contains (regex "^\\d+$") value
 
+alarmStatus model =
+  div [ class "alarm-status" ]
+    [ label [] [ text "Alarm Status " ]
+    , violated model.time model.alarm model.activeAudioRule
+    ]
+
 violated : Int -> Alarm -> AudioRule -> Html ViewMsg
 violated time alarm audioRule =
   let (AudioRule _ _ timeout) = audioRule in
@@ -148,32 +154,34 @@ alarmTime max val =
       , value <| toString val
       ] []
     , text " "
-    , text <| toString val
+    , if val > 0 then text <| toString val else text ""
     ]
 
 displayConnectionStatus : ConnectionStatus -> Html ViewMsg
 displayConnectionStatus connected =
-  case connected of
-    Disconnected ->
-      input
-        [ type_ "password"
-        , on "change" <| targetValue Json.Decode.string SetPassword
-        , placeholder "OBS Websockets password"
-        ] []
-    Connecting _ ->
-      div [ class "connecting" ] [ text "Connecting" ]
-    Connected _ version->
-      div [ class "connected" ]
-        [ text ("Connected (not authenticated) OBS v" ++ version)
-        , text " "
-        , button [ id "logout", onClick LogOut ] [ text "log out" ]
-        ]
-    Authenticated version->
-      div [ class "authenticated" ]
-        [ text ("Authenticated OBS v" ++ version)
-        , text " "
-        , button [ id "logout", onClick LogOut ] [ text "log out" ]
-        ]
+  div [ class "connection-status" ]
+    [ case connected of
+      Disconnected ->
+        input
+          [ type_ "password"
+          , on "change" <| targetValue Json.Decode.string SetPassword
+          , placeholder "OBS Websockets password"
+          ] []
+      Connecting _ ->
+        div [ class "connecting" ] [ text "Connecting" ]
+      Connected _ version->
+        div [ class "connected" ]
+          [ text ("Connected (not authenticated) OBS v" ++ version)
+          , text " "
+          , button [ id "logout", onClick LogOut ] [ text "log out" ]
+          ]
+      Authenticated version->
+        div [ class "authenticated" ]
+          [ text ("Authenticated OBS v" ++ version)
+          , text " "
+          , button [ id "logout", onClick LogOut ] [ text "log out" ]
+          ]
+   ]
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources ruleSet =

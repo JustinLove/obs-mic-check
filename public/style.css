@@ -5,12 +5,14 @@
 
 /* header */
 header {
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
   margin-bottom: 0.5em;
   border-bottom: solid #eee 1px;
+  display: flex;
 }
 #logout { margin-left: 1em; }
+.connection-status { margin: 0.5em; width: 17em; }
+.alarm-status { margin: 0.5em; }
+.alarm-status label { color: #888; font-size: 80%; }
 
 /* status */
 .rules { border: solid #aaa 1px; border-collapse: collapse;}
