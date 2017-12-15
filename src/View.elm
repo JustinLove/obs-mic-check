@@ -175,10 +175,26 @@ displayConnectionStatus connected =
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources ruleSet =
-  let videoState = RuleSet.activeVideoState sources ruleSet in
+  let
+    videoState = RuleSet.activeVideoState sources ruleSet
+    sourceOrder = sources
+      |> List.indexedMap (\index source -> (source.name, index))
+      |> Dict.fromList
+    ruleSourceOrder = ruleSet
+      |> RuleSet.toList
+      |> List.map (\((VideoState name _), _) -> name)
+      |> List.sort
+      |> List.indexedMap (\index name -> (name, index + 1000))
+      |> Dict.fromList
+  in
   div []
     [ ruleSet
       |> RuleSet.toList
+      |> List.sortBy (\((VideoState name _), _) ->
+        Dict.get name sourceOrder
+          |> Maybe.withDefault (Dict.get name ruleSourceOrder
+            |> Maybe.withDefault 2000)
+      )
       |> List.map (\rule -> lazy3 displayRule
           ((Just (Tuple.first rule)) == videoState)
           (checkRule sources rule)
