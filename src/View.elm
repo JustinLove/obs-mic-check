@@ -6,7 +6,7 @@ import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
-import Html.Lazy exposing (lazy2)
+import Html.Lazy exposing (lazy3)
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -196,6 +196,7 @@ displayRuleSet sources ruleSet =
       |> List.sort
       |> List.indexedMap (\index name -> (name, index + 1000))
       |> Dict.fromList
+    copyable = not <| List.isEmpty sources
   in
   div []
     [ ruleSet
@@ -210,7 +211,8 @@ displayRuleSet sources ruleSet =
             videoState = Tuple.first rule
             (VideoState name _) = videoState
           in
-          lazy2 displayRule
+          lazy3 displayRule
+          copyable
           (ruleClasses 
             ((Just videoState) == activeVideoState)
             (checkRule sources rule)
@@ -219,7 +221,8 @@ displayRuleSet sources ruleSet =
           rule
         )
       |> (flip List.append)
-        [ lazy2 displayDefaultRule
+        [ lazy3 displayDefaultRule
+          copyable
           (ruleClasses
             (Nothing == activeVideoState)
             ((Nothing == activeVideoState) && (checkAudioRule sources (RuleSet.default ruleSet)))
@@ -309,23 +312,23 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
-displayRule : Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
-displayRule classes (video, audio) =
+displayRule : Bool -> Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
+displayRule copyable classes (video, audio) =
   tr [ classes ]
     <| List.append
       [ td [ class "delete" ] [ button [ onClick (RemoveRule video) ] [ text "X" ] ]
       , (displayVideoRule video)
       ]
-      (displayAudioRule (VideoKey video) audio)
+      (displayAudioRule copyable (VideoKey video) audio)
 
-displayDefaultRule : Attribute ViewMsg -> AudioRule -> Html ViewMsg
-displayDefaultRule classes audioRule =
+displayDefaultRule : Bool -> Attribute ViewMsg -> AudioRule -> Html ViewMsg
+displayDefaultRule copyable classes audioRule =
   tr [ classes ]
     <| List.append
       [ td [ class "delete" ] []
       , td [] [ text "default " ]
       ]
-      (displayAudioRule DefaultKey audioRule)
+      (displayAudioRule copyable DefaultKey audioRule)
 
 ruleClasses : Bool -> Bool -> Bool -> Attribute ViewMsg
 ruleClasses active violation missing =
@@ -345,8 +348,8 @@ displayVideoRule videoState =
         , text sourceName
         ]
 
-displayAudioRule : RuleKey -> AudioRule -> List (Html ViewMsg)
-displayAudioRule key (AudioRule operator states timeout) =
+displayAudioRule : Bool -> RuleKey -> AudioRule -> List (Html ViewMsg)
+displayAudioRule copyable key (AudioRule operator states timeout) =
   [ td
     []
     [ button
@@ -367,7 +370,10 @@ displayAudioRule key (AudioRule operator states timeout) =
       ] []
     ]
   , td []
-    [ button [ onClick (CopyRule key) ] [ text "Copy" ] ]
+    [ button
+      [ onClick (CopyRule key), disabled (not copyable) ]
+      [ text "Copy" ]
+    ]
   ]
 
 displayAudioState : AudioState -> Html ViewMsg
