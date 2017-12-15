@@ -1,14 +1,18 @@
-.audio.muted { color: white; background-color: red; }
-.hidden { opacity: 0.5; }
-.alarms { background-color: #FBB; }
-.active { background-color: #BFB; }
-.violation { background-color: #FFB; }
-.missing { color: #888; background-color: #F2F2F2; }
+/* application mode */
 #status { display: none; }
 .mode-status #status { display: block; }
-.audio-mode { width: 10em; height: 2em; }
-.current-mode { background-color: #bbf; }
+.alarms { background-color: #FBB; }
 
+/* header */
+header {
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+  margin-bottom: 0.5em;
+  border-bottom: solid #eee 1px;
+}
+#logout { margin-left: 1em; }
+
+/* status */
 .rules { border: solid #aaa 1px; border-collapse: collapse;}
 .rules td, .rules th {
   border-top: solid #aaa 1px;
@@ -25,7 +29,11 @@
 .rules ul { margin: 0; padding: 0; text-align: left; list-style-type: none;}
 
 .timeout { width: 4em; }
+.active { background-color: #BFB; }
+.violation { background-color: #FFB; }
+.missing { color: #888; background-color: #F2F2F2; }
 
+/* video (and audio?) source select */
 .source-list { border: solid #aaa 1px; border-collapse: collapse;}
 .source-list td, .source-list th {
   border-top: solid #aaa 1px;
@@ -44,3 +52,11 @@
   border-left: none;
   padding-left: 0.2em;
 }
+.hidden { opacity: 0.5; }
+
+/* audio status select */
+.audio-mode { width: 10em; height: 2em; }
+.current-mode { background-color: #bbf; }
+
+/* general icons */
+.audio.muted { color: white; background-color: red; }

@@ -161,16 +161,18 @@ displayConnectionStatus connected =
         , placeholder "OBS Websockets password"
         ] []
     Connecting _ ->
-      span [ class "connecting" ] [ text "Connecting" ]
+      div [ class "connecting" ] [ text "Connecting" ]
     Connected _ version->
-      span [ class "connected" ]
+      div [ class "connected" ]
         [ text ("Connected (not authenticated) OBS v" ++ version)
-        , button [ onClick LogOut ] [ text "log out" ]
+        , text " "
+        , button [ id "logout", onClick LogOut ] [ text "log out" ]
         ]
     Authenticated version->
-      span [ class "authenticated" ]
+      div [ class "authenticated" ]
         [ text ("Authenticated OBS v" ++ version)
-        , button [ onClick LogOut ] [ text "log out" ]
+        , text " "
+        , button [ id "logout", onClick LogOut ] [ text "log out" ]
         ]
 
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
