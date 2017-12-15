@@ -6,7 +6,7 @@ import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
-import Html.Lazy exposing (lazy3)
+import Html.Lazy exposing (lazy2)
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -176,7 +176,7 @@ displayConnectionStatus connected =
 displayRuleSet : List Source -> RuleSet -> Html ViewMsg
 displayRuleSet sources ruleSet =
   let
-    videoState = RuleSet.activeVideoState sources ruleSet
+    activeVideoState = RuleSet.activeVideoState sources ruleSet
     sourceOrder = sources
       |> List.indexedMap (\index source -> (source.name, index))
       |> Dict.fromList
@@ -195,15 +195,26 @@ displayRuleSet sources ruleSet =
           |> Maybe.withDefault (Dict.get name ruleSourceOrder
             |> Maybe.withDefault 2000)
       )
-      |> List.map (\rule -> lazy3 displayRule
-          ((Just (Tuple.first rule)) == videoState)
-          (checkRule sources rule)
+      |> List.map (\rule ->
+          let
+            videoState = Tuple.first rule
+            (VideoState name _) = videoState
+          in
+          lazy2 displayRule
+          (ruleClasses 
+            ((Just videoState) == activeVideoState)
+            (checkRule sources rule)
+            (not <| Dict.member name sourceOrder)
+          )
           rule
         )
       |> (flip List.append)
-        [ lazy3 displayDefaultRule
-          (Nothing == videoState)
-          ((Nothing == videoState) && (checkAudioRule sources (RuleSet.default ruleSet)))
+        [ lazy2 displayDefaultRule
+          (ruleClasses
+            (Nothing == activeVideoState)
+            ((Nothing == activeVideoState) && (checkAudioRule sources (RuleSet.default ruleSet)))
+            False
+          )
           (RuleSet.default ruleSet) ]
       |> List.append
         [ th [] [ text "Video Source" ]
@@ -288,27 +299,27 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ text "<X " ]
     Live -> span [ class "audio live" ] [ text "<))" ]
 
-displayRule : Bool -> Bool -> (VideoState, AudioRule) -> Html ViewMsg
-displayRule active violation (video, audio) =
-  tr [ classList
-       [ ("active", active)
-       , ("violation", violation)
-       ]
-     ]
+displayRule : Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
+displayRule classes (video, audio) =
+  tr [ classes ]
     <| List.append
       [ (displayVideoRule video) ]
       (displayAudioRule (VideoKey video) audio)
 
-displayDefaultRule : Bool -> Bool -> AudioRule -> Html ViewMsg
-displayDefaultRule active violation audioRule =
-  tr [ classList
-       [ ("active", active)
-       , ("violation", violation)
-       ]
-     ]
+displayDefaultRule : Attribute ViewMsg -> AudioRule -> Html ViewMsg
+displayDefaultRule classes audioRule =
+  tr [ classes ]
     <| List.append
       [ td [] [ text "default " ] ]
       (displayAudioRule DefaultKey audioRule)
+
+ruleClasses : Bool -> Bool -> Bool -> Attribute ViewMsg
+ruleClasses active violation missing =
+  classList
+    [ ("active", active)
+    , ("violation", violation)
+    , ("missing", missing)
+    ]
 
 displayVideoRule : VideoState -> Html ViewMsg
 displayVideoRule videoState =

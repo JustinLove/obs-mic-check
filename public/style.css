@@ -3,6 +3,7 @@
 .alarms { background-color: #FBB; }
 .active { background-color: #BFB; }
 .violation { background-color: #FFB; }
+.missing { color: #888; background-color: #F2F2F2; }
 #status { display: none; }
 .mode-status #status { display: block; }
 .audio-mode { width: 10em; height: 2em; }
