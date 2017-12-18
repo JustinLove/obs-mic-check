@@ -173,15 +173,15 @@ displayConnectionStatus connected =
         div [ class "connecting" ] [ text "Connecting" ]
       Connected _ version->
         div [ class "connected" ]
-          [ text ("Connected (not authenticated) OBS v" ++ version)
+          [ button [ id "logout", onClick LogOut ] [ text "log out" ]
+          , text ("Connected (not authenticated) v" ++ version)
           , text " "
-          , button [ id "logout", onClick LogOut ] [ text "log out" ]
           ]
       Authenticated version->
         div [ class "authenticated" ]
-          [ text ("Authenticated OBS v" ++ version)
+          [ button [ id "logout", onClick LogOut ] [ text "log out" ]
+          , text ("OBS-Websocket v" ++ version)
           , text " "
-          , button [ id "logout", onClick LogOut ] [ text "log out" ]
           ]
    ]
 

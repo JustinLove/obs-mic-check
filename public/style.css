@@ -9,7 +9,7 @@ header {
   border-bottom: solid #eee 1px;
   display: flex;
 }
-#logout { margin-left: 1em; }
+#logout { margin-right: 1em; }
 .connection-status { margin: 0.5em; width: 17em; }
 .alarm-status { margin: 0.5em; }
 .alarm-status label { color: #888; font-size: 80%; }
