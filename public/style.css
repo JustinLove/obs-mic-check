@@ -35,7 +35,7 @@ header {
 .violation { background-color: #FFB; }
 .missing { color: #888; background-color: #F2F2F2; }
 .audio-status { display: flex; align-items: center; }
-.audio-status .operator { width: 2em; margin-right: 1em; }
+.audio-status .operator { width: 2em; margin-left: 0.5em; margin-right: 1em; }
 
 /* video (and audio?) source select */
 .source-list { border: solid #aaa 1px; border-collapse: collapse;}
