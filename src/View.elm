@@ -102,10 +102,11 @@ displaySelectAudio model operator audioStates =
       , audioGroup "All" (operator == All)
         (SelectAudioMode All)
       ]
-    , table [ class "source-list" ]
-      <| List.map (displayAudioSourceChoice audioStates)
-      <| List.filter mightBeAudioSource
-      <| sources
+    , sources
+      |> List.filter mightBeAudioSource
+      |> (\ss -> List.append ss (missingAudioSources audioStates ss))
+      |> List.map (displayAudioSourceChoice audioStates)
+      |> table [ class "source-list" ]
     ]
 
 targetValue : Json.Decode.Decoder a -> (a -> ViewMsg) -> Json.Decode.Decoder ViewMsg
@@ -301,6 +302,20 @@ displayAudioSourceChoice audioStates source =
 matchingAudioStatus : String -> AudioState -> Maybe Audio
 matchingAudioStatus sourceName (AudioState name status) =
   if name == sourceName then Just status else Nothing
+
+missingAudioSources : List AudioState -> List Source -> List Source
+missingAudioSources audioStates sources =
+  let sourceNames = List.map .name sources in
+  audioStates
+    |> List.map (\(AudioState name _) -> name)
+    |> List.filter (\name -> not <| List.member name sourceNames)
+    |> List.map (\name -> 
+      { name = name
+      , render = Hidden
+      , type_ = "missing audio source"
+      , volume = 1.0
+      , audio = Muted
+      })
 
 renderStatus : Render -> Html ViewMsg
 renderStatus render =
