@@ -318,7 +318,7 @@ displayRule : Bool -> Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewM
 displayRule copyable classes (video, audio) =
   tr [ classes ]
     <| List.append
-      [ td [ class "delete" ] [ button [ onClick (RemoveRule video) ] [ text "X" ] ]
+      [ td [ class "delete" ] [ button [ onClick (RemoveRule video) ] [ icon "bin" ] ]
       , (displayVideoRule video)
       ]
       (displayAudioRule copyable (VideoKey video) audio)
@@ -374,7 +374,7 @@ displayAudioRule copyable key (AudioRule operator states timeout) =
   , td []
     [ button
       [ onClick (CopyRule key), disabled (not copyable) ]
-      [ text "Copy" ]
+      [ icon "copy" ]
     ]
   ]
 
