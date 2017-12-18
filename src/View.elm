@@ -356,10 +356,12 @@ displayAudioRule copyable key (AudioRule operator states timeout) =
     []
     [ button
       [ onClick <| SelectRuleAudioRule key ]
-      [ text <| toString operator
-      , ul []
-        <| List.map (\e -> li [] [e])
-        <| List.map displayAudioState states
+      [ div [ class "audio-status" ]
+        [ div [ class "operator" ] [ text <| toString operator ]
+        , ul [ class "audio-states" ]
+          <| List.map (\e -> li [] [e])
+          <| List.map displayAudioState states
+        ]
       ]
     ]
   , td []
