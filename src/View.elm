@@ -7,6 +7,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
 import Html.Lazy exposing (lazy3)
+import Svg exposing (svg, use)
+import Svg.Attributes exposing (xlinkHref)
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -260,8 +262,8 @@ displaySourceForSelect tagger source =
       ]
     , onClick (tagger source.name)
     ]
-    [ td [ class "icon" ] [ renderStatus source.render ]
-    , td [ class "icon" ] [ audioStatus source.audio ]
+    [ td [ class "icon-column" ] [ renderStatus source.render ]
+    , td [ class "icon-column" ] [ audioStatus source.audio ]
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
     ]
@@ -279,7 +281,7 @@ displayAudioSourceChoice audioStates source =
       , ("source", True)
       ]
     ]
-    [ td [ class "icon" ]
+    [ td [ class "icon-column" ]
       [ input
         [ type_ "checkbox"
         , Html.Attributes.name (source.name ++ "-selected")
@@ -289,8 +291,8 @@ displayAudioSourceChoice audioStates source =
         , checked (status /= Nothing)
         ] []
       ]
-    , td [ class "icon" ] [ renderStatus source.render ]
-    , td [ class "icon", onClick (SelectAudioStatus source.name) ]
+    , td [ class "icon-column" ] [ renderStatus source.render ]
+    , td [ class "icon-column", onClick (SelectAudioStatus source.name) ]
       [ status |> Maybe.map audioStatus |> Maybe.withDefault (text "")]
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
@@ -303,14 +305,14 @@ matchingAudioStatus sourceName (AudioState name status) =
 renderStatus : Render -> Html ViewMsg
 renderStatus render =
   case render of
-    Visible -> span [ class "video" ] [ text "O" ]
-    Hidden -> span [ class "video" ] [ text "-" ]
+    Visible -> span [ class "video" ] [ icon "eye" ]
+    Hidden -> span [ class "video" ] [ icon "eye-blocked" ]
 
 audioStatus : Audio -> Html ViewMsg
 audioStatus audio =
   case audio of
-    Muted -> span [ class "audio muted" ] [ text "<X " ]
-    Live -> span [ class "audio live" ] [ text "<))" ]
+    Muted -> span [ class "audio muted" ] [ icon "volume-mute2" ]
+    Live -> span [ class "audio live" ] [ icon "volume-medium" ]
 
 displayRule : Bool -> Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
 displayRule copyable classes (video, audio) =
@@ -397,3 +399,8 @@ audioGroup name isSelected msg =
       , ("audio-mode", True)
       ]
     ] []
+
+icon : String -> Html ViewMsg
+icon name =
+  svg [ Svg.Attributes.class ("icon icon-"++name) ]
+    [ use [ xlinkHref ("#icon-"++name) ] [] ]
