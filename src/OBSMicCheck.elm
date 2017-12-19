@@ -388,14 +388,17 @@ checkAlarms model =
     sources = model.currentScene.sources
     violation = RuleSet.checkAudioRule sources model.activeAudioRule
   in
-  { model | alarm =
-    case (model.alarm, violation) of
-      (_, False) -> Silent
-      (Silent, True) -> Violation model.time
-      (Alarming start, True) -> Alarming start
-      (Violation start, True) ->
-        checkTimeout start model.time model.activeAudioRule
-  }
+  if model.time == 0 then
+    model
+  else
+    { model | alarm =
+      case (model.alarm, violation) of
+        (_, False) -> Silent
+        (Silent, True) -> Violation model.time
+        (Alarming start, True) -> Alarming start
+        (Violation start, True) ->
+          checkTimeout start model.time model.activeAudioRule
+    }
 
 checkTimeout : Int -> Int -> AudioRule -> Alarm
 checkTimeout start time (AudioRule _ _ timeout) =
