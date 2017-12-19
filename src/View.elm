@@ -1,6 +1,6 @@
 module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionStatus(..))
 
-import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), mightBeVideoSource, mightBeAudioSource)
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
 
 import Html exposing (..)
@@ -38,8 +38,10 @@ type AppMode
 
 type ConnectionStatus
  = Disconnected
- | Connecting String
- | Connected String String
+ | Connecting
+ | Connected String
+ | AuthRequired String Challenge
+ | LoggingIn String
  | Authenticated String
 
 -- VIEW
@@ -165,19 +167,23 @@ displayConnectionStatus connected =
   div [ class "connection-status" ]
     [ case connected of
       Disconnected ->
-        input
-          [ type_ "password"
-          , on "change" <| targetValue Json.Decode.string SetPassword
-          , placeholder "OBS Websockets password"
-          ] []
-      Connecting _ ->
+        div [ class "disconnected" ] [ text "Disconnected" ]
+      Connecting ->
         div [ class "connecting" ] [ text "Connecting" ]
-      Connected _ version->
+      Connected version ->
         div [ class "connected" ]
           [ button [ id "logout", onClick LogOut ] [ text "log out" ]
           , text ("Connected (not authenticated) v" ++ version)
           , text " "
           ]
+      AuthRequired version _ ->
+        input
+          [ type_ "password"
+          , on "change" <| targetValue Json.Decode.string SetPassword
+          , placeholder "OBS Websockets password"
+          ] []
+      LoggingIn version ->
+        div [ class "logging-in" ] [ text "Logging In..." ]
       Authenticated version->
         div [ class "authenticated" ]
           [ button [ id "logout", onClick LogOut ] [ text "log out" ]

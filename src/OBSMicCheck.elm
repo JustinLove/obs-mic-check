@@ -18,6 +18,8 @@ import Json.Decode
 import Json.Encode
 import Set
 import Dict exposing (Dict)
+import Process
+import Task
 
 obsAddress = "ws://localhost:4444"
 
@@ -43,13 +45,13 @@ type alias Model =
   -- derived state (transient)
   , activeAudioRule : AudioRule
   , alarm : Alarm
-  -- rules/config (transient)
+  -- rules/config (persistent)
   , ruleSet : RuleSet
   }
 
 init : (Model, Cmd Msg)
 init =
-  (makeModel, Cmd.none)
+  ({ makeModel | connected = Connecting }, attemptToConnect)
 
 defaultAudio = AudioRule All [(AudioState "Mic/Aux" Muted)] 5
 
@@ -70,6 +72,7 @@ makeModel =
 
 type Msg
   = Loaded (Result String RuleSet)
+  | AttemptToConnect
   | OBS (Result String Message)
   | View ViewMsg
 
@@ -81,6 +84,8 @@ update msg model =
     Loaded (Err message) ->
       let _ = Debug.log "load error" message in
       (model, Cmd.none)
+    AttemptToConnect ->
+      ({ model | connected = Connecting }, attemptToConnect)
     OBS (Ok (Response id response)) ->
       updateResponse response model
     OBS (Ok (Event event)) ->
@@ -91,10 +96,18 @@ update msg model =
     View (None) ->
       (model, Cmd.none)
     View (SetPassword word) ->
-      ( {model | connected = Connecting word }
-      , attemptToConnect)
+      case model.connected of
+        AuthRequired version challenge ->
+          ( {model | connected = LoggingIn version }
+          , obsSend <| Request.authenticate
+            (OBSWebSocket.authenticate word challenge.salt challenge.challenge)
+          )
+        _ -> (model, Cmd.none)
     View LogOut -> 
-      ( { makeModel | ruleSet = model.ruleSet }, Cmd.none )
+      ( { makeModel | ruleSet = model.ruleSet }
+      , Process.sleep 100
+        |> Task.perform (\_ -> AttemptToConnect)
+      )
     View Cancel ->
       ( { model | appMode = Status }, Cmd.none )
     View (SelectVideoSource source) ->
@@ -185,22 +198,13 @@ updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =
   case response of
     Response.GetVersion version ->
-      ( { model | connected = connectedStatus version.obsWebsocketVersion model.connected}
+      ( { model | connected = Connected version.obsWebsocketVersion}
       , obsSend <| Request.getAuthRequired
       )
     Response.AuthRequired challenge ->
-      case model.connected of
-        Connecting password ->
-          ( model
-          , obsSend <| Request.authenticate
-            (OBSWebSocket.authenticate password challenge.salt challenge.challenge)
-          )
-        Connected password _ ->
-          ( model
-          , obsSend <| Request.authenticate
-            (OBSWebSocket.authenticate password challenge.salt challenge.challenge)
-          )
-        _ -> (model, Cmd.none)
+      ( { model | connected = AuthRequired (connectionVersion model.connected) challenge }
+      , Cmd.none
+      )
     Response.AuthNotRequired ->
       authenticated model
     Response.Authenticate True ->
@@ -260,7 +264,7 @@ attemptToConnect =
 
 authenticated : Model -> (Model, Cmd Msg)
 authenticated model =
-  ( { model | connected = authenticatedStatus model.connected}
+  ( { model | connected = Authenticated <| connectionVersion model.connected}
   , refreshScene
   )
 
@@ -272,29 +276,21 @@ refreshScene =
     , obsSend <| Request.getSpecialSources
     ]
 
-authenticatedStatus : ConnectionStatus -> ConnectionStatus
-authenticatedStatus connected =
+connectionVersion : ConnectionStatus -> String
+connectionVersion connected =
   case connected of
     Disconnected ->
-      Authenticated "-"
-    Connecting _ ->
-      Authenticated "-"
-    Connected _ version->
-      Authenticated version 
+      "-"
+    Connecting ->
+      "-"
+    Connected version ->
+      version 
+    AuthRequired version _ ->
+      version 
+    LoggingIn version ->
+      version 
     Authenticated version->
-      Authenticated version 
-
-connectedStatus : String -> ConnectionStatus -> ConnectionStatus
-connectedStatus version connected =
-  case connected of
-    Disconnected ->
-      Connected "" version
-    Connecting password ->
-      Connected password version
-    Connected password _ ->
-      Connected password version
-    Authenticated _->
-      Connected "" version
+      version 
 
 setRender : Scene -> String -> Render -> Scene
 setRender scene sourceName render =
