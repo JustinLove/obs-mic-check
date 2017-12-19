@@ -20,6 +20,7 @@ import Set
 import Dict exposing (Dict)
 import Process
 import Task
+import Time
 
 obsAddress = "ws://localhost:4444"
 
@@ -464,6 +465,10 @@ subscriptions model =
         Sub.none
       else
         WebSocket.listen obsAddress receiveMessage
+    , if model.connected == Connecting then
+        Time.every (10 * 1000) (\_ -> AttemptToConnect)
+      else
+        Sub.none
     , loaded (Loaded << Json.Decode.decodeString RuleSet.Decode.ruleSet)
     ]
 
