@@ -210,7 +210,9 @@ updateResponse response model =
     Response.Authenticate True ->
       authenticated model
     Response.Authenticate False ->
-      ( { model | connected = Disconnected }, Cmd.none)
+      ( { model | connected = Connected (connectionVersion model.connected) }
+      , obsSend <| Request.getAuthRequired
+      )
     Response.CurrentScene scene ->
       updateSources model scene model.specialSources
     Response.SceneList currentSceneName scenes ->
