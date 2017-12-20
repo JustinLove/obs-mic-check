@@ -5,6 +5,7 @@ module RuleSet exposing
   , Operator(..)
   , AudioState(..)
   , Alarm(..)
+  , defaultAudio
   , activeAudioRule
   , activeVideoState
   , audioSourceNames
@@ -18,6 +19,8 @@ module RuleSet exposing
   , get
   , default
   , toList
+  , videoStates
+  , audioRules
   )
 
 import OBSWebSocket.Data exposing (Source, Render(..), Audio(..))
@@ -46,6 +49,8 @@ type Alarm
   = Silent
   | Violation Int
   | Alarming Int
+
+defaultAudio = AudioRule All [(AudioState "Mic/Aux" Muted)] 5
 
 activeAudioRule : List Source -> RuleSet -> AudioRule
 activeAudioRule sources ruleSet =

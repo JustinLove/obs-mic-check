@@ -217,6 +217,7 @@ displayRuleSet sources ruleSet =
       |> Dict.fromList
     copyable = not <| List.isEmpty sources
     hintCopy = (List.isEmpty (RuleSet.toList ruleSet) && copyable)
+    hintAudio = List.all (\audio -> audio == RuleSet.defaultAudio) (RuleSet.audioRules ruleSet) && copyable
   in
   div []
     [ ruleSet
@@ -254,6 +255,12 @@ displayRuleSet sources ruleSet =
           [ tr [ class "hint" ]
             [ th [ colspan 4 ] [ text "Start by copying audio rules to a source you want alarms for, such as BRB or Starting Soon." ]
             , th [] [ icon "arrow-up" ]
+            ]
+          ]
+        else if hintAudio then
+          [ tr [ class "hint" ]
+            [ th [ colspan 2 ] []
+            , th [ colspan 3 ] [ icon "arrow-up", text " Select the mics you use and what state they should alarm in." ]
             ]
           ]
         else

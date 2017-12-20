@@ -54,8 +54,6 @@ init : (Model, Cmd Msg)
 init =
   ({ makeModel | connected = Connecting }, attemptToConnect)
 
-defaultAudio = AudioRule All [(AudioState "Mic/Aux" Muted)] 5
-
 makeModel : Model
 makeModel =
   Model
@@ -65,9 +63,9 @@ makeModel =
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
     Dict.empty
-    defaultAudio
+    RuleSet.defaultAudio
     Silent
-    ( RuleSet.empty defaultAudio )
+    ( RuleSet.empty RuleSet.defaultAudio )
 
 -- UPDATE
 
