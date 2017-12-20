@@ -83,6 +83,11 @@ displaySelectVideo model =
   let scene = model.currentScene in
   div [ id "select-video" ]
     [ h2 [] [ text scene.name ]
+    , p [ class "heading-note" ]
+      [ text "Only sources from the active scene are shown." ]
+    , p [ class "instructions" ] [ text
+    """Select video source to copy audio rules to.
+    The first visible source will have it's audio rules checked. """ ]
     , button [ onClick Cancel ] [ text "Cancel" ]
     , table [ class "source-list" ]
       <| List.map (displaySourceForSelect SelectVideoSource)

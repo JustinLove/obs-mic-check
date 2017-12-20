@@ -38,6 +38,7 @@ header {
 .audio-status .operator { width: 2em; margin-left: 0.5em; margin-right: 1em; }
 
 /* video (and audio?) source select */
+h2 + .heading-note { margin-top: -1em; font-style: italic;}
 .source-list { border: solid #aaa 1px; border-collapse: collapse;}
 .source-list td, .source-list th {
   border-top: solid #aaa 1px;
