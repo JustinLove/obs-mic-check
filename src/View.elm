@@ -293,7 +293,7 @@ displayAudioSourceChoice audioStates source =
       , ("source", True)
       ]
     ]
-    [ td [ class "icon-column" ]
+    [ td []
       [ input
         [ type_ "checkbox"
         , Html.Attributes.name (source.name ++ "-selected")
@@ -304,8 +304,21 @@ displayAudioSourceChoice audioStates source =
         ] []
       ]
     , td [ class "icon-column" ] [ renderStatus source.render ]
-    , td [ class "icon-column", onClick (SelectAudioStatus source.name) ]
-      [ status |> Maybe.map audioStatus |> Maybe.withDefault (text "")]
+    , td [ class "icon-column" ]
+      ( case status of
+          Just audio ->
+            [ input
+              [ type_ "checkbox"
+              , Html.Attributes.name (source.name ++ "-live")
+              , id (source.name ++ "-live")
+              , value "live"
+              , onCheck (\_ -> (SelectAudioStatus source.name))
+              , checked (status == Just Live)
+              ] []
+            , label [ for (source.name ++ "-live") ] [ audioStatus audio ]
+            ]
+          Nothing -> [ text "" ]
+      )
     , td [] [ text source.name ]
     , td [] [ em [] [ text source.type_ ] ]
     ]
