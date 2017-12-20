@@ -58,6 +58,9 @@ h2 + .heading-note { margin-top: -1em; font-style: italic;}
   padding-left: 0.2em;
 }
 .hidden { opacity: 0.5; }
+#select-video tr.source:hover {
+  background-color: #eef;
+}
 
 /* audio status select */
 .audio-mode { width: 10em; height: 2em; }

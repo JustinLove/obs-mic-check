@@ -324,7 +324,10 @@ displayAudioSourceChoice audioStates source =
             ]
           Nothing -> [ text "" ]
       )
-    , td [] [ text source.name ]
+    , td []
+      [ label [ for (source.name ++ "-selected") ]
+        [ text source.name ]
+      ]
     , td [] [ em [] [ text source.type_ ] ]
     ]
 
