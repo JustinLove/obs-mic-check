@@ -216,6 +216,7 @@ displayRuleSet sources ruleSet =
       |> List.indexedMap (\index name -> (name, index + 1000))
       |> Dict.fromList
     copyable = not <| List.isEmpty sources
+    hintCopy = (List.isEmpty (RuleSet.toList ruleSet) && copyable)
   in
   div []
     [ ruleSet
@@ -248,6 +249,16 @@ displayRuleSet sources ruleSet =
             False
           )
           (RuleSet.default ruleSet) ]
+      |> (flip List.append)
+        (if hintCopy then
+          [ tr [ class "hint" ]
+            [ th [ colspan 4 ] [ text "Start by copying audio rules to a source you want alarms for, such as BRB or Starting Soon." ]
+            , th [] [ icon "arrow-up" ]
+            ]
+          ]
+        else
+          []
+        )
       |> List.append
         [ tr []
           [ th [ class "delete" ] [ text "Del" ]

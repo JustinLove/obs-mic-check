@@ -15,10 +15,11 @@ header {
 .alarm-status label { color: #888; font-size: 80%; }
 
 /* status */
-.rules { border: solid #aaa 1px; border-collapse: collapse;}
+.rules { xborder: solid #aaa 1px; border-collapse: collapse;}
+.rules tr { border: solid #aaa 1px; }
 .rules td, .rules th {
-  border-top: solid #aaa 1px;
-  border-bottom: solid #aaa 1px;
+  xborder-top: solid #aaa 1px;
+  xborder-bottom: solid #aaa 1px;
   border-left: dashed #eee 1px;
   border-right: dashed #eee 1px;
   padding-left: 1em;
@@ -29,6 +30,7 @@ header {
   padding-right: 0.2em;
 }
 .rules ul { margin: 0; padding: 0; text-align: left; list-style-type: none;}
+.rules .hint, .rules .hint th  { border: none; }
 
 .timeout { width: 4em; }
 .active { background-color: #BFB; }
