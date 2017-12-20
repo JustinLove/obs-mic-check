@@ -54,12 +54,12 @@
   var key = 'ruleSet'
 
   app.ports.save.subscribe(function(value) {
-    localStorage.setItem(key, value)
+    //localStorage.setItem(key, value)
   })
 
   var loaded = localStorage.getItem(key)
   if (loaded) {
-    app.ports.loaded.send(localStorage.getItem(key))
+    //app.ports.loaded.send(localStorage.getItem(key))
   }
 </script>
 

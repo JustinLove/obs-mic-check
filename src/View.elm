@@ -249,11 +249,13 @@ displayRuleSet sources ruleSet =
           )
           (RuleSet.default ruleSet) ]
       |> List.append
-        [ th [ class "delete" ] [ text "Del" ]
-        , th [] [ text "Video Source" ]
-        , th [] [ text "Audio Status" ]
-        , th [] [ text "Seconds" ]
-        , th [] [ text "Copy" ]
+        [ tr []
+          [ th [ class "delete" ] [ text "Del" ]
+          , th [] [ text "Video Source" ]
+          , th [] [ text "Audio Status" ]
+          , th [] [ text "Seconds" ]
+          , th [] [ text "Copy" ]
+          ]
         ]
       |> table [ class "rules" ]
     ]
