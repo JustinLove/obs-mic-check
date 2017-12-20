@@ -1,4 +1,17 @@
 /* application mode */
+
+/* https://stackoverflow.com/a/10639419 */
+html { min-height: 100%; position: relative; }
+body { height: 100%; margin: 0; }
+#application {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: auto;
+}
+
 #status { display: none; }
 .mode-status #status { display: block; }
 .alarms { background-color: #FBB; }

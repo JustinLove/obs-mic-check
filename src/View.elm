@@ -53,6 +53,7 @@ view model =
       [ ("alarms", alarming model.alarm)
       , ("mode-status", model.appMode == Status)
       ]
+    , id "application"
     ]
     [ displayHeader model
     , case model.appMode of
