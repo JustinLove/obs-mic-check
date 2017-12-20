@@ -275,6 +275,13 @@ displayRuleSet sources ruleSet =
           , th [] [ text "Copy" ]
           ]
         ]
+      |> List.append
+        [ tr [ class "hint" ]
+          [ th [ colspan 2 ] [ text "Alarm if source visible" ]
+          , th [] [ text "and mics are in this state" ]
+          , th [ colspan 2] [ text "for _ seconds" ]
+          ]
+        ]
       |> table [ class "rules" ]
     ]
 
