@@ -48,7 +48,8 @@ type AudioState
 type Alarm
   = Silent
   | Violation Int
-  | Alarming Int
+  | AlarmNotice Int
+  | AlarmRest Int
 
 defaultAudio = AudioRule All [(AudioState "Mic/Aux" Muted)] 5
 

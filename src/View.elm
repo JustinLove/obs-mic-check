@@ -66,7 +66,7 @@ displayHeader model =
   header []
     [ displayConnectionStatus model.connected
     , alarmStatus model
-    , if alarming model.alarm then
+    , if audioPlaying model.alarm then
         audio
           [ autoplay True
           , src "167337__willy-ineedthatapp-com__pup-alert.mp3"
@@ -154,7 +154,9 @@ violated time alarm audioRule =
       alarmTime timeout 0
     Violation start ->
       alarmTime timeout (time - start)
-    Alarming start ->
+    AlarmNotice start ->
+      alarmTime timeout (time - start)
+    AlarmRest start ->
       alarmTime timeout (time - start)
 
 alarmTime : Int -> Int -> Html ViewMsg
@@ -167,6 +169,22 @@ alarmTime max val =
     , text " "
     , if val > 0 then text <| toString val else text ""
     ]
+
+alarming : Alarm -> Bool
+alarming alarm =
+  case alarm of
+    Silent -> False
+    Violation _ -> False
+    AlarmNotice _ -> True
+    AlarmRest _ -> True
+
+audioPlaying : Alarm -> Bool
+audioPlaying alarm =
+  case alarm of
+    Silent -> False
+    Violation _ -> False
+    AlarmNotice _ -> True
+    AlarmRest _ -> False
 
 displayConnectionStatus : ConnectionStatus -> Html ViewMsg
 displayConnectionStatus connected =
@@ -289,13 +307,6 @@ displayRuleSet sources ruleSet =
 checkRule : List Source -> (VideoState, AudioRule) -> Bool
 checkRule sources (video, audio) =
   (checkVideoState sources video) && (checkAudioRule sources audio)
-
-alarming : Alarm -> Bool
-alarming alarm =
-  case alarm of
-    Silent -> False
-    Violation _ -> False
-    Alarming _ -> True
 
 displaySourceForSelect : (String -> ViewMsg) -> Source -> Html ViewMsg
 displaySourceForSelect tagger source =

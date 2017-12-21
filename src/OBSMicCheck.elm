@@ -392,17 +392,28 @@ checkAlarms model =
       case (model.alarm, violation) of
         (_, False) -> Silent
         (Silent, True) -> Violation model.time
-        (Alarming start, True) -> Alarming start
+        (AlarmNotice start, True) ->
+          checkNotice start model.time model.activeAudioRule
+        (AlarmRest start, True) ->
+          checkNotice start model.time model.activeAudioRule
         (Violation start, True) ->
           checkTimeout start model.time model.activeAudioRule
     }
 
 checkTimeout : Int -> Int -> AudioRule -> Alarm
 checkTimeout start time (AudioRule _ _ timeout) =
-  if time - start > timeout then
-    Alarming start
+  if time - start >= timeout then
+    AlarmNotice start
   else
     Violation start
+
+checkNotice : Int -> Int -> AudioRule -> Alarm
+checkNotice start time (AudioRule _ _ timeout) =
+  -- stream status messages update time, and arrive every 2 seconds
+  if ((time - start - timeout) % 60) // 2 == 0 then
+    AlarmNotice start
+  else
+    AlarmRest start
 
 mapRuleValue : RuleKey -> (AudioRule -> AudioRule) -> RuleSet -> RuleSet
 mapRuleValue key f ruleSet =
