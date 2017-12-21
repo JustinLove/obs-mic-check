@@ -47,6 +47,7 @@ type alias Model =
   -- derived state (transient)
   , activeAudioRule : AudioRule
   , alarm : Alarm
+  , droppedFrameRate : Float
   -- rules/config (persistent)
   , ruleSet : RuleSet
   }
@@ -67,6 +68,7 @@ makeModel =
     []
     RuleSet.defaultAudio
     Silent
+    0.0
     ( RuleSet.empty RuleSet.defaultAudio )
 
 -- UPDATE
@@ -391,12 +393,15 @@ checkAlarms model =
   let
     sources = model.currentScene.sources
     audioViolation = RuleSet.checkAudioRule sources model.activeAudioRule
-    frameViolation = checkFrameViolation model
+    dropped = droppedFrameRate model
+    frameViolation = dropped > 0.2
   in
   if model.time == 0 then
     model
   else
-    { model | alarm =
+    { model
+    | droppedFrameRate = dropped
+    , alarm =
       case (model.alarm, audioViolation || frameViolation) of
         (_, False) -> Silent
         (Silent, True) -> Violation model.time
@@ -408,8 +413,8 @@ checkAlarms model =
           checkTimeout start model.time model.activeAudioRule
     }
 
-checkFrameViolation : Model -> Bool
-checkFrameViolation model =
+droppedFrameRate : Model -> Float
+droppedFrameRate model =
   let
     dropped = model.recentStatus
       |> List.map .numDroppedFrames
@@ -421,9 +426,9 @@ checkFrameViolation model =
       |> toFloat
   in
     if total == 0.0 then
-      False
+       0.0
     else
-      ((dropped / total) > 0.2)
+      (dropped / total)
 
 sampleDifference : List Int -> Int
 sampleDifference list =

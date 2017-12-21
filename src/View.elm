@@ -77,7 +77,7 @@ displayHeader model =
 
 displayStatus model =
   div [ id "status" ]
-    [ displayRuleSet model.currentScene.sources model.ruleSet
+    [ displayRuleSet model model.currentScene.sources model.ruleSet
     ]
 
 displaySelectVideo model =
@@ -221,8 +221,8 @@ displayConnectionStatus connected =
           ]
    ]
 
-displayRuleSet : List Source -> RuleSet -> Html ViewMsg
-displayRuleSet sources ruleSet =
+--displayRuleSet : Model -> List Source -> RuleSet -> Html ViewMsg
+displayRuleSet model sources ruleSet =
   let
     activeVideoState = RuleSet.activeVideoState sources ruleSet
     sourceOrder = sources
@@ -270,6 +270,19 @@ displayRuleSet sources ruleSet =
           )
           (RuleSet.default ruleSet) ]
       |> (flip List.append)
+        [ tr [ (ruleClasses
+            (model.droppedFrameRate > 0)
+            (model.droppedFrameRate > 0.2)
+            False
+          ) ]
+          [ td [] []
+          , td [] [ text <| "Dropped Frames " ++ (toPercent model.droppedFrameRate) ]
+          , td [] []
+          , td [] []
+          , td [] []
+          ]
+        ]
+      |> (flip List.append)
         (if hintCopy then
           [ tr [ class "hint" ]
             [ th [ colspan 4 ] [ text "Start by copying audio rules to a source you want alarms for, such as BRB or Starting Soon." ]
@@ -303,6 +316,13 @@ displayRuleSet sources ruleSet =
         ]
       |> table [ class "rules" ]
     ]
+
+toPercent : Float -> String
+toPercent f =
+  (f * 100)
+    |> toString
+    |> String.left 4
+    |> (flip (++) "%")
 
 checkRule : List Source -> (VideoState, AudioRule) -> Bool
 checkRule sources (video, audio) =
