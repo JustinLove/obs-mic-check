@@ -5,7 +5,7 @@ import View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionSta
 import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
-import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources)
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources, StatusReport)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..))
@@ -43,6 +43,7 @@ type alias Model =
   , currentScene : Scene
   , specialSources : SpecialSources
   , allSources : Dict String Source
+  , recentStatus : List StatusReport
   -- derived state (transient)
   , activeAudioRule : AudioRule
   , alarm : Alarm
@@ -63,6 +64,7 @@ makeModel =
     { name = "-", sources = []}
     (SpecialSources Nothing Nothing Nothing Nothing Nothing)
     Dict.empty
+    []
     RuleSet.defaultAudio
     Silent
     ( RuleSet.empty RuleSet.defaultAudio )
@@ -245,12 +247,17 @@ updateEvent event model =
       , Cmd.none
       )
     Event.StreamStatus status ->
-      let _ = Debug.log "status" status in
       if model.connected == Disconnected then
         (model, attemptToConnect)
       else
         if status.streaming then
-          ( checkAlarms { model | time = status.totalStreamTime }
+          ( checkAlarms
+            { model
+            | time = status.totalStreamTime
+            , recentStatus = model.recentStatus
+              |> (::) status
+              |> List.take 31 -- one extra so we get 30 differences
+            }
           , model.ruleSet
             |> RuleSet.audioSourceNames
             |> List.map (Request.getMute >> obsSend)
@@ -383,13 +390,14 @@ checkAlarms : Model -> Model
 checkAlarms model =
   let
     sources = model.currentScene.sources
-    violation = RuleSet.checkAudioRule sources model.activeAudioRule
+    audioViolation = RuleSet.checkAudioRule sources model.activeAudioRule
+    frameViolation = checkFrameViolation model
   in
   if model.time == 0 then
     model
   else
     { model | alarm =
-      case (model.alarm, violation) of
+      case (model.alarm, audioViolation || frameViolation) of
         (_, False) -> Silent
         (Silent, True) -> Violation model.time
         (AlarmNotice start, True) ->
@@ -399,6 +407,34 @@ checkAlarms model =
         (Violation start, True) ->
           checkTimeout start model.time model.activeAudioRule
     }
+
+checkFrameViolation : Model -> Bool
+checkFrameViolation model =
+  let
+    dropped = model.recentStatus
+      |> List.map .numDroppedFrames
+      |> sampleDifference
+      |> toFloat
+    total = model.recentStatus
+      |> List.map .numTotalFrames
+      |> sampleDifference
+      |> toFloat
+  in
+    if total == 0.0 then
+      False
+    else
+      ((dropped / total) > 0.2)
+
+sampleDifference : List Int -> Int
+sampleDifference list =
+  let
+    length = List.length list
+    newest = list
+      |> List.head |> Maybe.withDefault 0
+    oldest = list |> List.drop (length - 1)
+      |> List.head |> Maybe.withDefault 0
+  in
+    newest - oldest
 
 checkTimeout : Int -> Int -> AudioRule -> Alarm
 checkTimeout start time (AudioRule _ _ timeout) =

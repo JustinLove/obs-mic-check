@@ -53,17 +53,13 @@ sceneItemVisibilityChanged =
     (field "item-name" string)
     (field "item-visible" render)
 
-type alias StatusReport =
-  { streaming : Bool
-  , recording : Bool
-  , totalStreamTime : Int
-  }
-
 streamStatus : Decoder EventData
 streamStatus =
-  map3 StatusReport
+  map5 StatusReport
     (field "streaming" bool)
     (field "recording" bool)
     (field "total-stream-time" int)
+    (field "num-total-frames" int)
+    (field "num-dropped-frames" int)
   |> map StreamStatus 
 

@@ -43,6 +43,14 @@ type alias SpecialSources =
   , mic3 : Maybe String
   }
 
+type alias StatusReport =
+  { streaming : Bool
+  , recording : Bool
+  , totalStreamTime : Int
+  , numTotalFrames : Int
+  , numDroppedFrames : Int
+  }
+
 scene : Decoder Scene
 scene =
   map2 Scene
