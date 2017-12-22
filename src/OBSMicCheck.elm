@@ -46,6 +46,8 @@ type alias Model =
   , recentStatus : List StatusReport
   -- derived state (transient)
   , activeAudioRule : AudioRule
+  , audioAlarm : Alarm
+  , frameAlarm : Alarm
   , alarm : Alarm
   , droppedFrameRate : Float
   -- rules/config (persistent)
@@ -66,6 +68,8 @@ makeModel =
   , allSources = Dict.empty
   , recentStatus = []
   , activeAudioRule = RuleSet.defaultAudio
+  , audioAlarm = Silent
+  , frameAlarm = Silent
   , alarm = Silent
   , droppedFrameRate = 0.0
   , ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
@@ -374,9 +378,9 @@ updateActive model =
   in
   { model
   | activeAudioRule = newActive
-  , alarm =
+  , audioAlarm =
     if model.activeAudioRule == newActive then
-      model.alarm
+      model.audioAlarm
     else
       if RuleSet.checkAudioRule sources newActive then
         Violation model.time
@@ -391,33 +395,44 @@ persist model =
 checkAlarms : Model -> Model
 checkAlarms model =
   let
+    m2 = checkAudioAlarms <| checkFrameAlarms model
+  in
+    { m2 | alarm =
+      if (alarmStart m2.frameAlarm) > (alarmStart m2.audioAlarm) then
+        m2.frameAlarm
+      else 
+        m2.audioAlarm
+    }
+
+alarmStart : Alarm -> Int
+alarmStart alarm =
+  case alarm of
+    Silent -> 0
+    Violation start -> start
+    AlarmNotice start -> start
+    AlarmRest start -> start
+
+checkAudioAlarms : Model -> Model
+checkAudioAlarms model =
+  let
     sources = model.currentScene.sources
     audioViolation = RuleSet.checkAudioRule sources model.activeAudioRule
     (AudioRule _ _ timeout) = model.activeAudioRule
+  in
+    { model
+    | audioAlarm = updateAlarmState model.time timeout audioViolation model.audioAlarm
+    }
+
+checkFrameAlarms : Model -> Model
+checkFrameAlarms model =
+  let
     dropped = droppedFrameRate model
     frameViolation = dropped > 0.2
   in
-  if model.time == 0 then
-    model
-  else
     { model
     | droppedFrameRate = dropped
-    , alarm = updateAlarmState model.time timeout
-      (audioViolation || frameViolation)
-      model.alarm
+    , frameAlarm = updateAlarmState model.time 0 frameViolation model.frameAlarm
     }
-
-updateAlarmState : Int -> Int -> Bool -> Alarm -> Alarm
-updateAlarmState time timeout violation alarm =
-  case (alarm, violation) of
-    (_, False) -> Silent
-    (Silent, True) -> Violation time
-    (AlarmNotice start, True) ->
-      checkNotice start time timeout
-    (AlarmRest start, True) ->
-      checkNotice start time timeout
-    (Violation start, True) ->
-      checkTimeout start time timeout
 
 droppedFrameRate : Model -> Float
 droppedFrameRate model =
@@ -446,6 +461,21 @@ sampleDifference list =
       |> List.head |> Maybe.withDefault 0
   in
     newest - oldest
+
+updateAlarmState : Int -> Int -> Bool -> Alarm -> Alarm
+updateAlarmState time timeout violation alarm =
+  if time == 0 then
+    Silent
+  else
+    case (alarm, violation) of
+      (_, False) -> Silent
+      (Silent, True) -> Violation time
+      (AlarmNotice start, True) ->
+        checkNotice start time timeout
+      (AlarmRest start, True) ->
+        checkNotice start time timeout
+      (Violation start, True) ->
+        checkTimeout start time timeout
 
 checkTimeout : Int -> Int -> Int -> Alarm
 checkTimeout start time timeout =
