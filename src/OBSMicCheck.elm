@@ -58,18 +58,18 @@ init =
 
 makeModel : Model
 makeModel =
-  Model
-    Disconnected
-    Status
-    0
-    { name = "-", sources = []}
-    (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-    Dict.empty
-    []
-    RuleSet.defaultAudio
-    Silent
-    0.0
-    ( RuleSet.empty RuleSet.defaultAudio )
+  { connected = Disconnected
+  , appMode = Status
+  , time =  0
+  , currentScene = { name = "-", sources = []}
+  , specialSources = (SpecialSources Nothing Nothing Nothing Nothing Nothing)
+  , allSources = Dict.empty
+  , recentStatus = []
+  , activeAudioRule = RuleSet.defaultAudio
+  , alarm = Silent
+  , droppedFrameRate = 0.0
+  , ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
+  }
 
 -- UPDATE
 
