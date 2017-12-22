@@ -393,6 +393,7 @@ checkAlarms model =
   let
     sources = model.currentScene.sources
     audioViolation = RuleSet.checkAudioRule sources model.activeAudioRule
+    (AudioRule _ _ timeout) = model.activeAudioRule
     dropped = droppedFrameRate model
     frameViolation = dropped > 0.2
   in
@@ -401,17 +402,22 @@ checkAlarms model =
   else
     { model
     | droppedFrameRate = dropped
-    , alarm =
-      case (model.alarm, audioViolation || frameViolation) of
-        (_, False) -> Silent
-        (Silent, True) -> Violation model.time
-        (AlarmNotice start, True) ->
-          checkNotice start model.time model.activeAudioRule
-        (AlarmRest start, True) ->
-          checkNotice start model.time model.activeAudioRule
-        (Violation start, True) ->
-          checkTimeout start model.time model.activeAudioRule
+    , alarm = updateAlarmState model.time timeout
+      (audioViolation || frameViolation)
+      model.alarm
     }
+
+updateAlarmState : Int -> Int -> Bool -> Alarm -> Alarm
+updateAlarmState time timeout violation alarm =
+  case (alarm, violation) of
+    (_, False) -> Silent
+    (Silent, True) -> Violation time
+    (AlarmNotice start, True) ->
+      checkNotice start time timeout
+    (AlarmRest start, True) ->
+      checkNotice start time timeout
+    (Violation start, True) ->
+      checkTimeout start time timeout
 
 droppedFrameRate : Model -> Float
 droppedFrameRate model =
@@ -441,15 +447,15 @@ sampleDifference list =
   in
     newest - oldest
 
-checkTimeout : Int -> Int -> AudioRule -> Alarm
-checkTimeout start time (AudioRule _ _ timeout) =
+checkTimeout : Int -> Int -> Int -> Alarm
+checkTimeout start time timeout =
   if time - start >= timeout then
     AlarmNotice start
   else
     Violation start
 
-checkNotice : Int -> Int -> AudioRule -> Alarm
-checkNotice start time (AudioRule _ _ timeout) =
+checkNotice : Int -> Int -> Int -> Alarm
+checkNotice start time timeout =
   -- stream status messages update time, and arrive every 2 seconds
   if ((time - start - timeout) % 60) // 2 == 0 then
     AlarmNotice start
