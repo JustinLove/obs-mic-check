@@ -7,18 +7,6 @@ import Json.Decode exposing (..)
 
 persistenceModel : Decoder PersistenceModel
 persistenceModel =
-  oneOf
-    [ versioned
-    , v1
-    ]
-
-v1 : Decoder PersistenceModel
-v1 =
-  map (\rs -> PersistenceModel rs 60 0.2)
-    ruleSet
-
-versioned : Decoder PersistenceModel
-versioned =
   field "version" int
   |> andThen (\version ->
     case version of
