@@ -9,7 +9,7 @@ import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Special
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..))
-import Alarm exposing (Alarm(..), AlarmRepeat(..), mergeAlarms, updateAlarmState, checkNotice)
+import Alarm exposing (Alarm(..), AlarmRepeat(..), mergeAlarms, updateAlarmState, isAlarming, updateRepeat)
 import RuleSet.Encode
 import RuleSet.Decode
 
@@ -404,7 +404,11 @@ checkAlarms model =
   in
     { m2
     | alarm = alarm
-    , alarmRepeat = checkNotice 2 58 alarm m2.time m2.alarmRepeat
+    , alarmRepeat =
+      if isAlarming alarm then
+        updateRepeat 2 58 m2.time m2.alarmRepeat
+      else
+        Rest 0
     }
 
 checkAudioAlarms : Model -> Model

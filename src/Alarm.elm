@@ -3,7 +3,8 @@ module Alarm exposing
   , AlarmRepeat(..)
   , mergeAlarms
   , updateAlarmState
-  , checkNotice
+  , isAlarming
+  , updateRepeat
   )
 
 type Alarm
@@ -48,21 +49,24 @@ alarmStart alarm =
     Violation start _ -> start
     Alarming start -> start
 
-checkNotice : Int -> Int -> Alarm -> Int -> AlarmRepeat -> AlarmRepeat
-checkNotice on off alarm time repeat =
+isAlarming : Alarm -> Bool
+isAlarming alarm =
   case alarm of
-    Silent -> Rest 0
-    Violation _ _ -> Rest 0
-    Alarming _->
-      case repeat of
-        Rest start ->
-          if (time - start) >= off then
-            Notice time
-          else
-            repeat
-        Notice start ->
-          if (time - start) >= on then
-            Rest time
-          else
-            repeat
+    Silent -> False
+    Violation _ _ -> False
+    Alarming _-> True
+
+updateRepeat : Int -> Int -> Int -> AlarmRepeat -> AlarmRepeat
+updateRepeat on off time repeat =
+  case repeat of
+    Rest start ->
+      if (time - start) >= off then
+        Notice time
+      else
+        repeat
+    Notice start ->
+      if (time - start) >= on then
+        Rest time
+      else
+        repeat
 

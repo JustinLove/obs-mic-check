@@ -2,7 +2,7 @@ module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionSta
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), checkVideoState, checkAudioRule)
-import Alarm exposing (Alarm(..), AlarmRepeat(..))
+import Alarm exposing (Alarm(..), AlarmRepeat(..), isAlarming)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -51,7 +51,7 @@ type ConnectionStatus
 view model =
   div
     [ classList
-      [ ("alarms", alarming model.alarm)
+      [ ("alarms", isAlarming model.alarm)
       , ("mode-status", model.appMode == Status)
       ]
     , id "application"
@@ -167,13 +167,6 @@ alarmTime max val =
     , text " "
     , if val > 0 then text <| toString val else text ""
     ]
-
-alarming : Alarm -> Bool
-alarming alarm =
-  case alarm of
-    Silent -> False
-    Violation _ _ -> False
-    Alarming _ -> True
 
 audioPlaying : AlarmRepeat -> Bool
 audioPlaying alarm =
