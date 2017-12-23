@@ -7,7 +7,7 @@ import Alarm exposing (Alarm(..), AlarmRepeat(..), isAlarming)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
-import Html.Lazy exposing (lazy3)
+import Html.Lazy exposing (lazy2, lazy3)
 import Svg exposing (svg, use)
 import Svg.Attributes exposing (xlinkHref)
 import Json.Decode
@@ -119,9 +119,15 @@ displayFrameRules model =
           ]
       [ text <| "Dropped Frames " ++ (toPercent model.droppedFrameRate)
       ]
-    , p [ class "config-frame-sample-window" ]
+    , lazy2 displayFrameParameters model.frameSampleWindow model.frameAlarmLevel
+    ]
+
+displayFrameParameters : Int -> Float -> Html ViewMsg
+displayFrameParameters frameSampleWindow frameAlarmLevel =
+  div []
+    [ p [ class "config-frame-sample-window" ]
       [ input
-        [ value <| toString model.frameSampleWindow
+        [ value <| toString frameSampleWindow
         , type_ "number"
         , Html.Attributes.min "1"
         , on "change" <| targetValue int SetFrameSampleWindow
@@ -131,17 +137,17 @@ displayFrameRules model =
       ]
     , p [ class "config-frame-alarm-level" ]
       [ input
-        [ value <| toString model.frameAlarmLevel
+        [ value <| toString (frameAlarmLevel * 100.0)
         , type_ "number"
         , Html.Attributes.min "0"
-        , Html.Attributes.max "1"
-        , step "0.001"
-        , on "change" <| targetValue float SetFrameAlarmLevel
+        , Html.Attributes.max "100"
+        , step "0.1"
+        , on "change" <| targetValue (Json.Decode.map ((*) 0.01) <| float) SetFrameAlarmLevel
         ] []
       , text " "
-      , label [] [ text "Alarm Level" ]
-      ]
+      , label [] [ text "Alarm Level %" ]
     ]
+  ]
 
 displaySelectVideo model =
   let scene = model.currentScene in
@@ -219,7 +225,7 @@ validInt value =
 
 validFloat : String -> Bool
 validFloat value =
-  Regex.contains (regex "^\\d+(\\.\\d+)$") value
+  Regex.contains (regex "^\\d+(\\.\\d+)?$") value
 
 alarmStatus model =
   div [ class "alarm-status" ]
