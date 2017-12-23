@@ -12,8 +12,6 @@ body { height: 100%; margin: 0; }
   overflow: auto;
 }
 
-#status { display: none; }
-.mode-status #status { display: block; }
 .alarms { background-color: #FBB; }
 
 /* header */
@@ -27,7 +25,15 @@ header {
 .alarm-status { margin: 0.5em; }
 .alarm-status label { color: #888; font-size: 80%; }
 
-/* status */
+/* navigation */
+nav ul { list-style-type: none; display: flex; }
+nav li {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+nav li.selected { background-color: #bbf; }
+
+/* audio rules */
 .rules { xborder: solid #aaa 1px; border-collapse: collapse;}
 .rules tr { border: solid #aaa 1px; }
 .rules td, .rules th {

@@ -19,6 +19,7 @@ type ViewMsg
   | SetPassword String
   | LogOut
   | Cancel
+  | Navigate AppMode
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
@@ -33,7 +34,8 @@ type RuleKey
   | DefaultKey
 
 type AppMode
-  = Status
+  = AudioRules
+  | FrameRules
   | SelectVideo AudioRule
   | SelectAudio RuleKey Operator (List AudioState)
 
@@ -52,13 +54,15 @@ view model =
   div
     [ classList
       [ ("alarms", isAlarming model.alarm)
-      , ("mode-status", model.appMode == Status)
+      , ("mode-audio-rules", model.appMode == AudioRules)
       ]
     , id "application"
     ]
     [ displayHeader model
+    , displayNavigation model
     , case model.appMode of
-        Status -> displayStatus model
+        AudioRules -> displayAudioRules model
+        FrameRules -> div [] []
         SelectVideo _ -> displaySelectVideo model
         SelectAudio _ operator audioStates -> displaySelectAudio model operator audioStates
     ]
@@ -76,8 +80,30 @@ displayHeader model =
         text ""
     ]
 
-displayStatus model =
-  div [ id "status" ]
+displayNavigation model =
+  nav []
+    [ ul []
+      [ navigationItem model.appMode AudioRules "Audio Alarms"
+      , navigationItem model.appMode FrameRules "Frame Alarm"
+      ]
+    ]
+
+navigationItem : AppMode -> AppMode -> String -> Html ViewMsg
+navigationItem current target title =
+  li [ classList [ ("selected", current == target) ] ]
+    [ input
+      [ type_ "radio"
+      , Html.Attributes.name "navigation"
+      , id (title ++ "-navigation")
+      , value title
+      , onCheck (\_ -> Navigate target)
+      , checked (current == target)
+      ] []
+    , label [ for (title ++ "-navigation") ] [ text title ]
+    ]
+
+displayAudioRules model =
+  div [ id "audio-rules" ]
     [ displayRuleSet model model.currentScene.sources model.ruleSet
     ]
 

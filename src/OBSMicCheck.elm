@@ -63,7 +63,7 @@ init =
 makeModel : Model
 makeModel =
   { connected = Disconnected
-  , appMode = Status
+  , appMode = AudioRules
   , time =  0
   , currentScene = { name = "-", sources = []}
   , specialSources = (SpecialSources Nothing Nothing Nothing Nothing Nothing)
@@ -119,13 +119,15 @@ update msg model =
         |> Task.perform (\_ -> AttemptToConnect)
       )
     View Cancel ->
-      ( { model | appMode = Status }, Cmd.none )
+      ( { model | appMode = AudioRules }, Cmd.none )
+    View (Navigate mode) ->
+      ( { model | appMode = mode }, Cmd.none )
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->
           { model
           | ruleSet = RuleSet.insert (VideoState source Visible) audioRule model.ruleSet
-          , appMode = Status
+          , appMode = AudioRules
           }
             |> updateActive
             |> persist
@@ -172,7 +174,7 @@ update msg model =
           | ruleSet = mapRuleValue ruleKey
             (\(AudioRule _ _ timeout) -> AudioRule operator audioStates timeout)
             model.ruleSet
-          , appMode = Status
+          , appMode = AudioRules
           }
             |> updateActive
             |> persist
