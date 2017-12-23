@@ -28,6 +28,8 @@ type ViewMsg
   | SetTimeout RuleKey Int
   | CopyRule RuleKey
   | RemoveRule VideoState
+  | SetFrameSampleWindow Int
+  | SetFrameAlarmLevel Float
 
 type RuleKey
   = VideoKey VideoState
@@ -109,13 +111,35 @@ displayAudioRules model =
 
 displayFrameRules model =
   div [ id "frame-rules" ]
-    [ div [ (ruleClasses
+    [ p [ (ruleClasses
               (model.droppedFrameRate > 0)
               (model.droppedFrameRate > 0.2)
               False
             )
           ]
       [ text <| "Dropped Frames " ++ (toPercent model.droppedFrameRate)
+      ]
+    , p [ class "config-frame-sample-window" ]
+      [ input
+        [ value <| toString model.frameSampleWindow
+        , type_ "number"
+        , Html.Attributes.min "1"
+        , on "change" <| targetValue int SetFrameSampleWindow
+        ] []
+      , text " "
+      , label [] [ text "Sample Seconds" ]
+      ]
+    , p [ class "config-frame-alarm-level" ]
+      [ input
+        [ value <| toString model.frameAlarmLevel
+        , type_ "number"
+        , Html.Attributes.min "0"
+        , Html.Attributes.max "1"
+        , step "0.001"
+        , on "change" <| targetValue float SetFrameAlarmLevel
+        ] []
+      , text " "
+      , label [] [ text "Alarm Level" ]
       ]
     ]
 
@@ -165,19 +189,37 @@ int : Json.Decode.Decoder Int
 int =
   Json.Decode.string
     |> Json.Decode.andThen (\text ->
-      if validNumber text then
-        Json.Decode.succeed <| getNumber text
+      if validInt text then
+        Json.Decode.succeed <| getInt text
       else
         Json.Decode.fail "not an integer"
       )
 
-getNumber : String -> Int
-getNumber s =
+float : Json.Decode.Decoder Float
+float =
+  Json.Decode.string
+    |> Json.Decode.andThen (\text ->
+      if validFloat text then
+        Json.Decode.succeed <| getFloat text
+      else
+        Json.Decode.fail "not a floating point number"
+      )
+
+getInt : String -> Int
+getInt s =
   String.toInt s |> Result.withDefault 0
 
-validNumber : String -> Bool
-validNumber value =
+getFloat : String -> Float
+getFloat s =
+  String.toFloat s |> Result.withDefault 0
+
+validInt : String -> Bool
+validInt value =
   Regex.contains (regex "^\\d+$") value
+
+validFloat : String -> Bool
+validFloat value =
+  Regex.contains (regex "^\\d+(\\.\\d+)$") value
 
 alarmStatus model =
   div [ class "alarm-status" ]

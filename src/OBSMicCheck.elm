@@ -209,6 +209,12 @@ update msg model =
       }
         |> updateActive
         |> persist
+    View (SetFrameSampleWindow window) ->
+      { model | frameSampleWindow = window }
+        |> persist
+    View (SetFrameAlarmLevel level) ->
+      { model | frameAlarmLevel = min 1.0 level }
+        |> persist
 
 updateResponse : ResponseData -> Model -> (Model, Cmd Msg)
 updateResponse response model =

@@ -87,6 +87,10 @@ h2 + .heading-note { margin-top: -1em; font-style: italic;}
 .audio-mode { width: 10em; height: 2em; }
 .current-mode { background-color: #bbf; }
 
+/* frame rules */
+.config-frame-sample-window input { width: 5em; }
+.config-frame-alarm-level input { width: 5em; }
+
 /* general icons */
 svg.icon {
   display: inline-block;
