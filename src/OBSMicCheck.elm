@@ -2,6 +2,8 @@ module OBSMicCheck exposing (..)
 
 import Harbor exposing (..)
 import Model exposing (..)
+import Model.Encode
+import Model.Decode
 import View exposing (view, ViewMsg(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
@@ -41,7 +43,7 @@ init =
 -- UPDATE
 
 type Msg
-  = Loaded (Result String RuleSet)
+  = Loaded (Result String PersistenceModel)
   | AttemptToConnect
   | OBS (Result String Message)
   | View ViewMsg
@@ -49,8 +51,8 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Loaded (Ok ruleSet) ->
-      ({model | ruleSet = ruleSet}, Cmd.none)
+    Loaded (Ok pm) ->
+      ({model | ruleSet = pm.ruleSet}, Cmd.none)
     Loaded (Err message) ->
       let _ = Debug.log "load error" message in
       (model, Cmd.none)
@@ -363,7 +365,7 @@ updateActive model =
 
 persist : Model -> (Model, Cmd Msg)
 persist model =
-  (model, saveRules model.ruleSet)
+  (model, saveModel model)
 
 checkAlarms : Model -> Model
 checkAlarms model =
@@ -473,10 +475,11 @@ obsSend : Json.Encode.Value -> Cmd Msg
 obsSend message =
   WebSocket.send obsAddress (Json.Encode.encode 0 message)
 
-saveRules : RuleSet -> Cmd Msg
-saveRules ruleSet =
-  ruleSet
-    |> RuleSet.Encode.ruleSet
+saveModel : Model -> Cmd Msg
+saveModel model =
+  { ruleSet = model.ruleSet
+  }
+    |> Model.Encode.persistenceModel
     |> Json.Encode.encode 0
     |> save
 
@@ -493,7 +496,7 @@ subscriptions model =
         Time.every (10 * 1000) (\_ -> AttemptToConnect)
       else
         Sub.none
-    , loaded (Loaded << Json.Decode.decodeString RuleSet.Decode.ruleSet)
+    , loaded (Loaded << Json.Decode.decodeString Model.Decode.persistenceModel)
     ]
 
 receiveMessage : String -> Msg

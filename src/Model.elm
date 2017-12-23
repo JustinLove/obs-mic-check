@@ -1,4 +1,4 @@
-module Model exposing (Model, AppMode(..), RuleKey(..), ConnectionStatus(..), makeModel)
+module Model exposing (Model, PersistenceModel, AppMode(..), RuleKey(..), ConnectionStatus(..), makeModel)
 
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..))
 import Alarm exposing (Alarm(..), AlarmRepeat(..))
@@ -47,6 +47,10 @@ type alias Model =
   , ruleSet : RuleSet
   , frameSampleWindow : Int
   , frameAlarmLevel : Float
+  }
+
+type alias PersistenceModel =
+  { ruleSet : RuleSet
   }
 
 makeModel : Model
