@@ -62,7 +62,7 @@ view model =
     , displayNavigation model
     , case model.appMode of
         AudioRules -> displayAudioRules model
-        FrameRules -> div [] []
+        FrameRules -> displayFrameRules model
         SelectVideo _ -> displaySelectVideo model
         SelectAudio _ operator audioStates -> displaySelectAudio model operator audioStates
     ]
@@ -105,6 +105,18 @@ navigationItem current target title =
 displayAudioRules model =
   div [ id "audio-rules" ]
     [ displayRuleSet model model.currentScene.sources model.ruleSet
+    ]
+
+displayFrameRules model =
+  div [ id "frame-rules" ]
+    [ div [ (ruleClasses
+              (model.droppedFrameRate > 0)
+              (model.droppedFrameRate > 0.2)
+              False
+            )
+          ]
+      [ text <| "Dropped Frames " ++ (toPercent model.droppedFrameRate)
+      ]
     ]
 
 displaySelectVideo model =
@@ -283,19 +295,6 @@ displayRuleSet model sources ruleSet =
             False
           )
           (RuleSet.default ruleSet) ]
-      |> (flip List.append)
-        [ tr [ (ruleClasses
-            (model.droppedFrameRate > 0)
-            (model.droppedFrameRate > 0.2)
-            False
-          ) ]
-          [ td [] []
-          , td [] [ text <| "Dropped Frames " ++ (toPercent model.droppedFrameRate) ]
-          , td [] []
-          , td [] []
-          , td [] []
-          ]
-        ]
       |> (flip List.append)
         (if hintCopy then
           [ tr [ class "hint" ]
