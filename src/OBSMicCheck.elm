@@ -54,6 +54,8 @@ type alias Model =
   , droppedFrameRate : Float
   -- rules/config (persistent)
   , ruleSet : RuleSet
+  , frameSampleWindow : Int
+  , frameAlarmLevel : Float
   }
 
 init : (Model, Cmd Msg)
@@ -76,6 +78,8 @@ makeModel =
   , alarmRepeat = Rest 0
   , droppedFrameRate = 0.0
   , ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
+  , frameSampleWindow = 60
+  , frameAlarmLevel = 0.2
   }
 
 -- UPDATE
@@ -267,7 +271,8 @@ updateEvent event model =
             | time = status.totalStreamTime
             , recentStatus = model.recentStatus
               |> (::) status
-              |> List.take 31 -- one extra so we get 30 differences
+              |> List.take ((model.frameSampleWindow // 2) + 1)
+                -- one extra so we get N differences
             }
           , model.ruleSet
             |> RuleSet.audioSourceNames
@@ -428,7 +433,7 @@ checkFrameAlarms : Model -> Model
 checkFrameAlarms model =
   let
     dropped = droppedFrameRate model
-    frameViolation = dropped > 0.2
+    frameViolation = dropped > model.frameAlarmLevel
   in
     { model
     | droppedFrameRate = dropped
