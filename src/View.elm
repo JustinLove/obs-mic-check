@@ -1,5 +1,6 @@
-module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionStatus(..))
+module View exposing (view, ViewMsg(..))
 
+import Model exposing (Model, AppMode(..), RuleKey(..), ConnectionStatus(..))
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), checkVideoState, checkAudioRule)
 import Alarm exposing (Alarm(..), AlarmRepeat(..), isAlarming)
@@ -31,27 +32,9 @@ type ViewMsg
   | SetFrameSampleWindow Int
   | SetFrameAlarmLevel Float
 
-type RuleKey
-  = VideoKey VideoState
-  | DefaultKey
-
-type AppMode
-  = AudioRules
-  | FrameRules
-  | SelectVideo AudioRule
-  | SelectAudio RuleKey Operator (List AudioState)
-
-type ConnectionStatus
- = Disconnected
- | Connecting
- | Connected String
- | AuthRequired String Challenge
- | LoggingIn String
- | Authenticated String
-
 -- VIEW
 
--- view : Model -> Html ViewMsg
+view : Model -> Html ViewMsg
 view model =
   div
     [ classList
@@ -69,6 +52,7 @@ view model =
         SelectAudio _ operator audioStates -> displaySelectAudio model operator audioStates
     ]
 
+displayHeader : Model -> Html ViewMsg
 displayHeader model =
   header []
     [ displayConnectionStatus model.connected
@@ -82,6 +66,7 @@ displayHeader model =
         text ""
     ]
 
+displayNavigation : Model -> Html ViewMsg
 displayNavigation model =
   nav []
     [ ul []
@@ -104,11 +89,13 @@ navigationItem current target title =
     , label [ for (title ++ "-navigation") ] [ text title ]
     ]
 
+displayAudioRules : Model -> Html ViewMsg
 displayAudioRules model =
   div [ id "audio-rules" ]
     [ displayRuleSet model model.currentScene.sources model.ruleSet
     ]
 
+displayFrameRules : Model -> Html ViewMsg
 displayFrameRules model =
   div [ id "frame-rules" ]
     [ p [ (ruleClasses
@@ -149,6 +136,7 @@ displayFrameParameters frameSampleWindow frameAlarmLevel =
     ]
   ]
 
+displaySelectVideo : Model -> Html ViewMsg
 displaySelectVideo model =
   let scene = model.currentScene in
   div [ id "select-video" ]
@@ -170,6 +158,7 @@ noCurrentRule : RuleSet -> Source -> Bool
 noCurrentRule ruleSet source =
   Nothing == (RuleSet.get (VideoState source.name Visible) ruleSet)
 
+displaySelectAudio : Model -> Operator -> List AudioState -> Html ViewMsg
 displaySelectAudio model operator audioStates =
   let sources = Dict.values model.allSources in
   div [ id "select-audio" ]
@@ -227,6 +216,7 @@ validFloat : String -> Bool
 validFloat value =
   Regex.contains (regex "^\\d+(\\.\\d+)?$") value
 
+alarmStatus : Model -> Html ViewMsg
 alarmStatus model =
   div [ class "alarm-status" ]
     [ label [] [ text "Alarm Status " ]
@@ -295,7 +285,7 @@ displayConnectionStatus connected =
           ]
    ]
 
---displayRuleSet : Model -> List Source -> RuleSet -> Html ViewMsg
+displayRuleSet : Model -> List Source -> RuleSet -> Html ViewMsg
 displayRuleSet model sources ruleSet =
   let
     activeVideoState = RuleSet.activeVideoState sources ruleSet

@@ -1,7 +1,8 @@
 module OBSMicCheck exposing (..)
 
 import Harbor exposing (..)
-import View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionStatus(..))
+import Model exposing (..)
+import View exposing (view, ViewMsg(..))
 import OBSWebSocket
 import OBSWebSocket.Request as Request
 import OBSWebSocket.Response as Response exposing (ResponseData)
@@ -33,54 +34,9 @@ main =
     , subscriptions = subscriptions
     }
 
--- MODEL
-
-type alias Model =
-  -- application state (transient)
-  { connected : ConnectionStatus
-  , appMode : AppMode
-  -- obs state (transient)
-  , time : Int
-  , currentScene : Scene
-  , specialSources : SpecialSources
-  , allSources : Dict String Source
-  , recentStatus : List StatusReport
-  -- derived state (transient)
-  , activeAudioRule : AudioRule
-  , audioAlarm : Alarm
-  , frameAlarm : Alarm
-  , alarm : Alarm
-  , alarmRepeat : AlarmRepeat
-  , droppedFrameRate : Float
-  -- rules/config (persistent)
-  , ruleSet : RuleSet
-  , frameSampleWindow : Int
-  , frameAlarmLevel : Float
-  }
-
 init : (Model, Cmd Msg)
 init =
   ({ makeModel | connected = Connecting }, attemptToConnect)
-
-makeModel : Model
-makeModel =
-  { connected = Disconnected
-  , appMode = AudioRules
-  , time =  0
-  , currentScene = { name = "-", sources = []}
-  , specialSources = (SpecialSources Nothing Nothing Nothing Nothing Nothing)
-  , allSources = Dict.empty
-  , recentStatus = []
-  , activeAudioRule = RuleSet.defaultAudio
-  , audioAlarm = Silent
-  , frameAlarm = Silent
-  , alarm = Silent
-  , alarmRepeat = Rest 0
-  , droppedFrameRate = 0.0
-  , ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
-  , frameSampleWindow = 60
-  , frameAlarmLevel = 0.2
-  }
 
 -- UPDATE
 
