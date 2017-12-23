@@ -8,7 +8,8 @@ import OBSWebSocket.Response as Response exposing (ResponseData)
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), SpecialSources, StatusReport)
 import OBSWebSocket.Event as Event exposing (EventData)
 import OBSWebSocket.Message as Message exposing (..)
-import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..))
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..))
+import Alarm exposing (Alarm(..), AlarmRepeat(..), mergeAlarms, updateAlarmState, checkNotice)
 import RuleSet.Encode
 import RuleSet.Decode
 
@@ -49,6 +50,7 @@ type alias Model =
   , audioAlarm : Alarm
   , frameAlarm : Alarm
   , alarm : Alarm
+  , alarmRepeat : AlarmRepeat
   , droppedFrameRate : Float
   -- rules/config (persistent)
   , ruleSet : RuleSet
@@ -71,6 +73,7 @@ makeModel =
   , audioAlarm = Silent
   , frameAlarm = Silent
   , alarm = Silent
+  , alarmRepeat = Rest 0
   , droppedFrameRate = 0.0
   , ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
   }
@@ -375,6 +378,7 @@ updateActive model =
   let
     sources = model.currentScene.sources
     newActive = RuleSet.activeAudioRule sources model.ruleSet
+    (AudioRule _ _ timeout) = newActive
   in
   { model
   | activeAudioRule = newActive
@@ -383,7 +387,7 @@ updateActive model =
       model.audioAlarm
     else
       if RuleSet.checkAudioRule sources newActive then
-        Violation model.time
+        Violation model.time timeout
       else
         Silent
   }
@@ -396,21 +400,12 @@ checkAlarms : Model -> Model
 checkAlarms model =
   let
     m2 = checkAudioAlarms <| checkFrameAlarms model
+    alarm = mergeAlarms m2.frameAlarm m2.audioAlarm
   in
-    { m2 | alarm =
-      if (alarmStart m2.frameAlarm) > (alarmStart m2.audioAlarm) then
-        m2.frameAlarm
-      else 
-        m2.audioAlarm
+    { m2
+    | alarm = alarm
+    , alarmRepeat = checkNotice 2 58 alarm m2.time m2.alarmRepeat
     }
-
-alarmStart : Alarm -> Int
-alarmStart alarm =
-  case alarm of
-    Silent -> 0
-    Violation start -> start
-    AlarmNotice start -> start
-    AlarmRest start -> start
 
 checkAudioAlarms : Model -> Model
 checkAudioAlarms model =
@@ -461,36 +456,6 @@ sampleDifference list =
       |> List.head |> Maybe.withDefault 0
   in
     newest - oldest
-
-updateAlarmState : Int -> Int -> Bool -> Alarm -> Alarm
-updateAlarmState time timeout violation alarm =
-  if time == 0 then
-    Silent
-  else
-    case (alarm, violation) of
-      (_, False) -> Silent
-      (Silent, True) -> Violation time
-      (AlarmNotice start, True) ->
-        checkNotice start time timeout
-      (AlarmRest start, True) ->
-        checkNotice start time timeout
-      (Violation start, True) ->
-        checkTimeout start time timeout
-
-checkTimeout : Int -> Int -> Int -> Alarm
-checkTimeout start time timeout =
-  if time - start >= timeout then
-    AlarmNotice start
-  else
-    Violation start
-
-checkNotice : Int -> Int -> Int -> Alarm
-checkNotice start time timeout =
-  -- stream status messages update time, and arrive every 2 seconds
-  if ((time - start - timeout) % 60) // 2 == 0 then
-    AlarmNotice start
-  else
-    AlarmRest start
 
 mapRuleValue : RuleKey -> (AudioRule -> AudioRule) -> RuleSet -> RuleSet
 mapRuleValue key f ruleSet =

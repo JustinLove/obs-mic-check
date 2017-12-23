@@ -1,7 +1,8 @@
 module View exposing (view, ViewMsg(..), AppMode(..), RuleKey(..), ConnectionStatus(..))
 
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, mightBeVideoSource, mightBeAudioSource)
-import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), Alarm(..), checkVideoState, checkAudioRule)
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), checkVideoState, checkAudioRule)
+import Alarm exposing (Alarm(..), AlarmRepeat(..))
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -66,7 +67,7 @@ displayHeader model =
   header []
     [ displayConnectionStatus model.connected
     , alarmStatus model
-    , if audioPlaying model.alarm then
+    , if audioPlaying model.alarmRepeat then
         audio
           [ autoplay True
           , src "167337__willy-ineedthatapp-com__pup-alert.mp3"
@@ -143,21 +144,18 @@ validNumber value =
 alarmStatus model =
   div [ class "alarm-status" ]
     [ label [] [ text "Alarm Status " ]
-    , violated model.time model.alarm model.activeAudioRule
+    , violated model.time model.alarm
     ]
 
-violated : Int -> Alarm -> AudioRule -> Html ViewMsg
-violated time alarm audioRule =
-  let (AudioRule _ _ timeout) = audioRule in
+violated : Int -> Alarm -> Html ViewMsg
+violated time alarm =
   case alarm of
     Silent ->
-      alarmTime timeout 0
-    Violation start ->
+      alarmTime 1 0
+    Violation start timeout ->
       alarmTime timeout (time - start)
-    AlarmNotice start ->
-      alarmTime timeout (time - start)
-    AlarmRest start ->
-      alarmTime timeout (time - start)
+    Alarming start ->
+      alarmTime 1 (time - start)
 
 alarmTime : Int -> Int -> Html ViewMsg
 alarmTime max val =
@@ -174,17 +172,14 @@ alarming : Alarm -> Bool
 alarming alarm =
   case alarm of
     Silent -> False
-    Violation _ -> False
-    AlarmNotice _ -> True
-    AlarmRest _ -> True
+    Violation _ _ -> False
+    Alarming _ -> True
 
-audioPlaying : Alarm -> Bool
+audioPlaying : AlarmRepeat -> Bool
 audioPlaying alarm =
   case alarm of
-    Silent -> False
-    Violation _ -> False
-    AlarmNotice _ -> True
-    AlarmRest _ -> False
+    Notice _ -> True
+    Rest _ -> False
 
 displayConnectionStatus : ConnectionStatus -> Html ViewMsg
 displayConnectionStatus connected =

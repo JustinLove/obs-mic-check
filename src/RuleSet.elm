@@ -4,7 +4,6 @@ module RuleSet exposing
   , AudioRule(..)
   , Operator(..)
   , AudioState(..)
-  , Alarm(..)
   , defaultAudio
   , activeAudioRule
   , activeVideoState
@@ -44,12 +43,6 @@ type Operator
 
 type AudioState
   = AudioState String Audio
-
-type Alarm
-  = Silent
-  | Violation Int
-  | AlarmNotice Int
-  | AlarmRest Int
 
 defaultAudio = AudioRule All [(AudioState "Mic/Aux" Muted)] 5
 
