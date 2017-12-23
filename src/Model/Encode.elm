@@ -7,4 +7,9 @@ import Json.Encode exposing (..)
 
 persistenceModel : PersistenceModel -> Value
 persistenceModel pm =
-  ruleSet pm.ruleSet
+  object
+    [ ("version", int 2)
+    , ("ruleSet", ruleSet pm.ruleSet)
+    , ("frameSampleWindow", int pm.frameSampleWindow)
+    , ("frameAlarmLevel", float pm.frameAlarmLevel)
+    ]

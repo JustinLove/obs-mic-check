@@ -51,6 +51,8 @@ type alias Model =
 
 type alias PersistenceModel =
   { ruleSet : RuleSet
+  , frameSampleWindow : Int
+  , frameAlarmLevel : Float
   }
 
 makeModel : Model

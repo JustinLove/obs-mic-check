@@ -52,7 +52,12 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Loaded (Ok pm) ->
-      ({model | ruleSet = pm.ruleSet}, Cmd.none)
+      ( { model
+        | ruleSet = pm.ruleSet
+        , frameSampleWindow = pm.frameSampleWindow
+        , frameAlarmLevel = pm.frameAlarmLevel
+        }
+      , Cmd.none)
     Loaded (Err message) ->
       let _ = Debug.log "load error" message in
       (model, Cmd.none)
@@ -478,6 +483,8 @@ obsSend message =
 saveModel : Model -> Cmd Msg
 saveModel model =
   { ruleSet = model.ruleSet
+  , frameSampleWindow = model.frameSampleWindow
+  , frameAlarmLevel = model.frameAlarmLevel
   }
     |> Model.Encode.persistenceModel
     |> Json.Encode.encode 0
