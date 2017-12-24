@@ -32,6 +32,7 @@ nav li {
   padding-right: 1em;
 }
 nav li.selected { background-color: #bbf; }
+nav .icon { display: inline-block; margin-left: 0.5em;}
 
 /* audio rules */
 .rules { xborder: solid #aaa 1px; border-collapse: collapse;}
@@ -96,6 +97,7 @@ svg.icon {
   display: inline-block;
   width: 1em;
   height: 1em;
+  vertical-align: -0.1em;
   stroke-width: 0;
   stroke: currentColor;
   fill: currentColor;

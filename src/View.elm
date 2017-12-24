@@ -70,13 +70,15 @@ displayNavigation : Model -> Html ViewMsg
 displayNavigation model =
   nav []
     [ ul []
-      [ navigationItem model.appMode AudioRules "Audio Alarms"
-      , navigationItem model.appMode FrameRules "Frame Alarm"
+      [ navigationItem model.appMode AudioRules
+        "Audio Alarms" (iconForAlarm model.audioAlarm)
+      , navigationItem model.appMode FrameRules
+        "Frame Alarm" (iconForAlarm model.frameAlarm)
       ]
     ]
 
-navigationItem : AppMode -> AppMode -> String -> Html ViewMsg
-navigationItem current target title =
+navigationItem : AppMode -> AppMode -> String -> Html ViewMsg -> Html ViewMsg
+navigationItem current target title status =
   li [ classList [ ("selected", current == target) ] ]
     [ input
       [ type_ "radio"
@@ -86,7 +88,11 @@ navigationItem current target title =
       , onCheck (\_ -> Navigate target)
       , checked (current == target)
       ] []
-    , label [ for (title ++ "-navigation") ] [ text title ]
+    , label [ for (title ++ "-navigation") ]
+      [ text title
+      , text " "
+      , status
+      ]
     ]
 
 displayAudioRules : Model -> Html ViewMsg
@@ -559,6 +565,16 @@ audioGroup name isSelected msg =
       , ("audio-mode", True)
       ]
     ] []
+
+iconForAlarm : Alarm -> Html ViewMsg
+iconForAlarm alarm =
+  case alarm of
+    Silent ->
+      text ""
+    Violation _ _ ->
+      icon "warning"
+    Alarming _ ->
+      icon "fire"
 
 icon : String -> Html ViewMsg
 icon name =
