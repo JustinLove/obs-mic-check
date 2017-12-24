@@ -33,6 +33,8 @@ nav li {
 }
 nav li.selected { background-color: #bbf; }
 nav .icon { display: inline-block; margin-left: 0.5em;}
+nav .icon-warning { color: yellow; }
+nav .icon-fire { color: red; }
 
 /* audio rules */
 .rules { xborder: solid #aaa 1px; border-collapse: collapse;}
