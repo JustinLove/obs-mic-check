@@ -91,6 +91,7 @@ h2 + .heading-note { margin-top: -1em; font-style: italic;}
 /* frame rules */
 .config-frame-sample-window input { width: 5em; }
 .config-frame-alarm-level input { width: 5em; }
+.chart { width: 40em; }
 
 /* general icons */
 svg.icon {

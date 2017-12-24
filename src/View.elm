@@ -1,16 +1,17 @@
 module View exposing (view, ViewMsg(..))
 
 import Model exposing (Model, AppMode(..), RuleKey(..), ConnectionStatus(..))
-import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, mightBeVideoSource, mightBeAudioSource)
+import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, StatusReport, mightBeVideoSource, mightBeAudioSource)
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), checkVideoState, checkAudioRule)
 import Alarm exposing (Alarm(..), AlarmRepeat(..), isAlarming)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, on, onCheck)
-import Html.Lazy exposing (lazy2, lazy3)
+import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Svg exposing (svg, use)
 import Svg.Attributes exposing (xlinkHref)
+import Charty.LineChart as LineChart
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -113,6 +114,7 @@ displayFrameRules model =
       [ text <| "Dropped Frames " ++ (toPercent model.droppedFrameRate)
       ]
     , lazy2 displayFrameParameters model.frameSampleWindow model.frameAlarmLevel
+    , div [ class "chart" ] [ lazy displayFrameGraph model.recentStatus ]
     ]
 
 displayFrameParameters : Int -> Float -> Html ViewMsg
@@ -141,6 +143,35 @@ displayFrameParameters frameSampleWindow frameAlarmLevel =
       , label [] [ text "Alarm Level %" ]
     ]
   ]
+
+displayFrameGraph : List StatusReport -> Html ViewMsg
+displayFrameGraph recentStatus =
+  let
+    totalFrames =
+      { label = "Total Frames"
+      , data = extractSeries .numTotalFrames recentStatus
+      }
+    droppedFrames =
+      { label = "Dropped Frames"
+      , data = extractSeries .numDroppedFrames recentStatus
+      }
+    dataset = [ totalFrames, droppedFrames ]
+  in
+    LineChart.view LineChart.defaults dataset
+
+extractSeries : (StatusReport -> Int) -> List StatusReport -> List LineChart.DataPoint
+extractSeries selector recentStatus =
+  let
+    data = recentStatus
+      |> List.map selector
+    diffs = List.map2 (-) data (List.drop 1 data)
+      |> List.map toFloat
+    times = recentStatus
+      |> List.map .totalStreamTime
+      |> List.map toFloat
+      |> List.drop 1
+  in
+    List.map2 (,) times diffs
 
 displaySelectVideo : Model -> Html ViewMsg
 displaySelectVideo model =
