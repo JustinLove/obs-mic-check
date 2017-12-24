@@ -106,7 +106,7 @@ displayFrameRules model =
   div [ id "frame-rules" ]
     [ p [ (ruleClasses
               (model.droppedFrameRate > 0)
-              (model.droppedFrameRate > 0.2)
+              (model.droppedFrameRate > model.frameAlarmLevel)
               False
             )
           ]

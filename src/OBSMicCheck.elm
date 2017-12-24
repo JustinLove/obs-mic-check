@@ -402,11 +402,12 @@ checkFrameAlarms : Model -> Model
 checkFrameAlarms model =
   let
     dropped = droppedFrameRate model
-    frameViolation = dropped > model.frameAlarmLevel
+    frameViolation = dropped > 0
+    frameAlarm = dropped > model.frameAlarmLevel
   in
     { model
     | droppedFrameRate = dropped
-    , frameAlarm = updateAlarmState model.time 0 frameViolation model.frameAlarm
+    , frameAlarm = updateFrameAlarm model.time frameViolation frameAlarm model.frameAlarm
     }
 
 droppedFrameRate : Model -> Float
@@ -436,6 +437,23 @@ sampleDifference list =
       |> List.head |> Maybe.withDefault 0
   in
     newest - oldest
+
+updateFrameAlarm : Int -> Bool -> Bool -> Alarm -> Alarm
+updateFrameAlarm time frameViolation frameAlarm alarm =
+  if time == 0 then
+    Silent
+  else if frameAlarm then
+    case alarm of
+      Silent -> Alarming time
+      Violation start _ -> Alarming start
+      Alarming start -> alarm
+  else if frameViolation then
+    case alarm of
+      Silent -> Violation time 0
+      Violation start _ -> alarm
+      Alarming start -> Violation start 0
+  else
+    Silent
 
 mapRuleValue : RuleKey -> (AudioRule -> AudioRule) -> RuleSet -> RuleSet
 mapRuleValue key f ruleSet =
