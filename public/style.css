@@ -40,8 +40,6 @@ nav .icon-fire { color: red; }
 .rules { xborder: solid #aaa 1px; border-collapse: collapse;}
 .rules tr { border: solid #aaa 1px; }
 .rules td, .rules th {
-  xborder-top: solid #aaa 1px;
-  xborder-bottom: solid #aaa 1px;
   border-left: dashed #eee 1px;
   border-right: dashed #eee 1px;
   padding-left: 1em;
