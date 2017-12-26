@@ -69,10 +69,16 @@ displayHeader model =
 
 displayNavigation : Model -> Html ViewMsg
 displayNavigation model =
+  let
+    activeVideoState = RuleSet.activeVideoState model.currentScene.sources model.ruleSet
+    audioTitle = case activeVideoState of
+      Just (VideoState name _) -> name
+      Nothing -> "Audio Alarms"
+  in
   nav []
     [ ul []
       [ navigationItem model.appMode AudioRules "audio-alarms"
-        "Audio Alarms"
+        audioTitle
         (iconForAlarm model.audioAlarm)
       , navigationItem model.appMode FrameRules "frame-alarm"
         ("Dropped Frames " ++ (toPercent model.droppedFrameRate))
