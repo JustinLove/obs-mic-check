@@ -71,25 +71,27 @@ displayNavigation : Model -> Html ViewMsg
 displayNavigation model =
   nav []
     [ ul []
-      [ navigationItem model.appMode AudioRules
-        "Audio Alarms" (iconForAlarm model.audioAlarm)
-      , navigationItem model.appMode FrameRules
-        "Frame Alarm" (iconForAlarm model.frameAlarm)
+      [ navigationItem model.appMode AudioRules "audio-alarms"
+        "Audio Alarms"
+        (iconForAlarm model.audioAlarm)
+      , navigationItem model.appMode FrameRules "frame-alarm"
+        ("Dropped Frames " ++ (toPercent model.droppedFrameRate))
+        (iconForAlarm model.frameAlarm)
       ]
     ]
 
-navigationItem : AppMode -> AppMode -> String -> Html ViewMsg -> Html ViewMsg
-navigationItem current target title status =
+navigationItem : AppMode -> AppMode -> String -> String -> Html ViewMsg -> Html ViewMsg
+navigationItem current target itemId title status =
   li [ classList [ ("selected", current == target) ] ]
     [ input
       [ type_ "radio"
       , Html.Attributes.name "navigation"
-      , id (title ++ "-navigation")
+      , id (itemId ++ "-navigation")
       , value title
       , onCheck (\_ -> Navigate target)
       , checked (current == target)
       ] []
-    , label [ for (title ++ "-navigation") ]
+    , label [ for (itemId ++ "-navigation") ]
       [ text title
       , text " "
       , status
