@@ -11,7 +11,7 @@ import Html.Events exposing (onClick, on, onCheck)
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Svg exposing (svg, use)
 import Svg.Attributes exposing (xlinkHref)
-import Plot
+import Plot exposing (defaultSeriesPlotCustomizations)
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -146,7 +146,10 @@ displayFrameParameters frameSampleWindow frameAlarmLevel =
 
 displayFrameGraph : List StatusReport -> Html ViewMsg
 displayFrameGraph recentStatus =
-   Plot.viewSeries
+   Plot.viewSeriesCustom
+    { defaultSeriesPlotCustomizations
+    | height = 200
+    }
     [ Plot.line <| extractSeries .numTotalFrames Plot.clear
     , Plot.area <| extractSeries .numDroppedFrames Plot.diamond
     ]
