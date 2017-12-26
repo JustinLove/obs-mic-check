@@ -11,7 +11,7 @@ import Html.Events exposing (onClick, on, onCheck)
 import Html.Lazy exposing (lazy, lazy2, lazy3)
 import Svg exposing (svg, use)
 import Svg.Attributes exposing (xlinkHref)
-import Charty.LineChart as LineChart
+import Plot
 import Json.Decode
 import Dict
 import Regex exposing (regex)
@@ -146,21 +146,14 @@ displayFrameParameters frameSampleWindow frameAlarmLevel =
 
 displayFrameGraph : List StatusReport -> Html ViewMsg
 displayFrameGraph recentStatus =
-  let
-    totalFrames =
-      { label = "Total Frames"
-      , data = extractSeries .numTotalFrames recentStatus
-      }
-    droppedFrames =
-      { label = "Dropped Frames"
-      , data = extractSeries .numDroppedFrames recentStatus
-      }
-    dataset = [ totalFrames, droppedFrames ]
-  in
-    LineChart.view LineChart.defaults dataset
+   Plot.viewSeries
+    [ Plot.line <| extractSeries .numTotalFrames Plot.clear
+    , Plot.area <| extractSeries .numDroppedFrames Plot.diamond
+    ]
+    recentStatus
 
-extractSeries : (StatusReport -> Int) -> List StatusReport -> List LineChart.DataPoint
-extractSeries selector recentStatus =
+extractSeries : (StatusReport -> Int) -> (Float -> Float -> Plot.DataPoint msg)-> List StatusReport -> List (Plot.DataPoint msg)
+extractSeries selector dataPoint recentStatus =
   let
     data = recentStatus
       |> List.map selector
@@ -171,7 +164,7 @@ extractSeries selector recentStatus =
       |> List.map toFloat
       |> List.drop 1
   in
-    List.map2 (,) times diffs
+    List.map2 dataPoint times diffs
 
 displaySelectVideo : Model -> Html ViewMsg
 displaySelectVideo model =
