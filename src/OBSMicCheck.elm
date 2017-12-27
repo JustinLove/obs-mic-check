@@ -26,8 +26,6 @@ import Process
 import Task
 import Time
 
-obsAddress = "ws://localhost:4444"
-
 main =
   Html.program
     { init = init
@@ -38,7 +36,8 @@ main =
 
 init : (Model, Cmd Msg)
 init =
-  ({ makeModel | connected = Connecting }, attemptToConnect)
+  let model = { makeModel | connected = Connecting }
+  in (model, attemptToConnect model)
 
 -- UPDATE
 
@@ -62,7 +61,7 @@ update msg model =
       let _ = Debug.log "load error" message in
       (model, Cmd.none)
     AttemptToConnect ->
-      ({ model | connected = Connecting }, attemptToConnect)
+      ({ model | connected = Connecting }, attemptToConnect model)
     OBS (Ok (Response id response)) ->
       updateResponse response model
     OBS (Ok (Event event)) ->
@@ -76,7 +75,7 @@ update msg model =
       case model.connected of
         AuthRequired version challenge ->
           ( {model | connected = LoggingIn version }
-          , obsSend <| Request.authenticate
+          , obsSend model <| Request.authenticate
             (OBSWebSocket.authenticate word challenge.salt challenge.challenge)
           )
         _ -> (model, Cmd.none)
@@ -184,7 +183,7 @@ updateResponse response model =
   case response of
     Response.GetVersion version ->
       ( { model | connected = Connected version.obsWebsocketVersion}
-      , obsSend <| Request.getAuthRequired
+      , obsSend model <| Request.getAuthRequired
       )
     Response.AuthRequired challenge ->
       ( { model | connected = AuthRequired (connectionVersion model.connected) challenge }
@@ -196,7 +195,7 @@ updateResponse response model =
       authenticated model
     Response.Authenticate False ->
       ( { model | connected = Connected (connectionVersion model.connected) }
-      , obsSend <| Request.getAuthRequired
+      , obsSend model <| Request.getAuthRequired
       )
     Response.CurrentScene scene ->
       updateSources model scene model.specialSources
@@ -223,16 +222,16 @@ updateEvent event model =
     Event.SwitchScenes scene ->
       updateSources model scene model.specialSources
     Event.SceneItemAdded sceneName sourceName ->
-      (model, refreshScene)
+      (model, refreshScene model)
     Event.SceneItemRemoved sceneName sourceName ->
-      (model, refreshScene)
+      (model, refreshScene model)
     Event.SceneItemVisibilityChanged sceneName sourceName render ->
       ( updateActive {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
       )
     Event.StreamStatus status ->
       if model.connected == Disconnected then
-        (model, attemptToConnect)
+        (model, attemptToConnect model)
       else
         if status.streaming then
           ( checkAlarms
@@ -245,28 +244,28 @@ updateEvent event model =
             }
           , model.ruleSet
             |> RuleSet.audioSourceNames
-            |> List.map (Request.getMute >> obsSend)
+            |> List.map (Request.getMute >> (obsSend model))
             |> Cmd.batch
           )
         else
           (model, Cmd.none)
 
-attemptToConnect : Cmd Msg
-attemptToConnect =
-  obsSend <| Request.getVersion
+attemptToConnect : Model -> Cmd Msg
+attemptToConnect model =
+  obsSend model <| Request.getVersion
 
 authenticated : Model -> (Model, Cmd Msg)
 authenticated model =
   ( { model | connected = Authenticated <| connectionVersion model.connected}
-  , refreshScene
+  , refreshScene model
   )
 
-refreshScene : Cmd Msg
-refreshScene =
+refreshScene : Model -> Cmd Msg
+refreshScene model =
   Cmd.batch
-    [ obsSend <| Request.getCurrentScene
-    , obsSend <| Request.getSceneList
-    , obsSend <| Request.getSpecialSources
+    [ obsSend model <| Request.getCurrentScene
+    , obsSend model <| Request.getSceneList
+    , obsSend model <| Request.getSpecialSources
     ]
 
 connectionVersion : ConnectionStatus -> String
@@ -319,7 +318,7 @@ updateSources model scene specialSources =
     , allSources = updateAllSources specialSources (Dict.values model.allSources)
     }
   , scenePlus.sources
-    |> List.map (.name >> Request.getMute >> obsSend)
+    |> List.map (.name >> Request.getMute >> (obsSend model))
     |> Cmd.batch
   )
 
@@ -494,9 +493,9 @@ toggleAudio audio =
     Live -> Muted
     Muted -> Live
 
-obsSend : Json.Encode.Value -> Cmd Msg
-obsSend message =
-  WebSocket.send obsAddress (Json.Encode.encode 0 message)
+obsSend : Model -> Json.Encode.Value -> Cmd Msg
+obsSend model message =
+  WebSocket.send (obsAddress model.obsHost model.obsPort) (Json.Encode.encode 0 message)
 
 saveModel : Model -> Cmd Msg
 saveModel model =
@@ -508,6 +507,10 @@ saveModel model =
     |> Json.Encode.encode 0
     |> save
 
+obsAddress : String -> Int -> String
+obsAddress host port_ =
+  "ws://" ++ host ++ ":" ++ (toString port_)
+
 -- SUBSCRIPTIONS
 
 subscriptions : Model -> Sub Msg
@@ -516,7 +519,7 @@ subscriptions model =
     [ if model.connected == Disconnected then
         Sub.none
       else
-        WebSocket.listen obsAddress receiveMessage
+        WebSocket.listen (obsAddress model.obsHost model.obsPort) receiveMessage
     , if model.connected == Connecting then
         Time.every (10 * 1000) (\_ -> AttemptToConnect)
       else

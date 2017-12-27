@@ -47,6 +47,8 @@ type alias Model =
   , ruleSet : RuleSet
   , frameSampleWindow : Int
   , frameAlarmLevel : Float
+  , obsHost : String
+  , obsPort : Int
   }
 
 type alias PersistenceModel =
@@ -73,5 +75,7 @@ makeModel =
   , ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
   , frameSampleWindow = 60
   , frameAlarmLevel = 0.2
+  , obsHost = "localhost"
+  , obsPort = 4444
   }
 
