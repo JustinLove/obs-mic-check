@@ -14,6 +14,13 @@ body { height: 100%; margin: 0; }
 
 .alarms { background-color: #FBB; }
 
+/* connection config view */
+#connection-view { margin: 1em; }
+
+#connection-config .setting { margin-bottom: 1em; }
+#connection-config label { display: block; }
+#connection-config input { display: block; }
+
 /* header */
 header {
   margin-bottom: 0.5em;

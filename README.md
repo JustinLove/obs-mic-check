@@ -1,6 +1,6 @@
 # OBS Mic-Check
 
-Check that audio state and active video sources are synchronized, e.g., when "BRB" is showing, mic should be off, and vice-versa. Also includes alarms for dropped frames.
+Check that [OBS Studio](https://obsproject.com/) audio state and active video sources are synchronized, e.g., when "BRB" is showing, mic should be off, and vice-versa. Also includes alarms for dropped frames.
 
 ## Requirements
 

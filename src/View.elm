@@ -61,34 +61,59 @@ view model =
 
 connectionView : Model -> Html ViewMsg
 connectionView model =
+  div [ id "connection-view" ]
+    [ connectionConfigView model
+    , aboutView model
+    ]
+
+connectionConfigView : Model -> Html ViewMsg
+connectionConfigView model =
   div [ id "connection-config" ]
-    [ p [ class "config-obs-host" ]
-      [ input
+    [ h3 [] [ text "Connect" ]
+    , div [ class "setting config-obs-host" ]
+      [ label [] [ text "OBS Hostname" ]
+      , input
         [ value model.obsHost
         , type_ "text"
         , on "change" <| targetValue Json.Decode.string SetObsHost
         ] []
-      , text " "
-      , label [] [ text "OBS Hostname" ]
       ]
-    , p [ class "config-obs-port" ]
-      [ input
+    , div [ class "setting config-obs-port" ]
+      [ label [] [ text "OBS Port" ]
+      , input
         [ value <| toString model.obsPort
         , type_ "number"
         , Html.Attributes.min "0"
         , Html.Attributes.max "65535"
         , on "change" <| targetValue int SetObsPort
         ] []
-      , text " "
-      , label [] [ text "OBS Port" ]
-    , div []
-        [ text "Requires "
-        , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
-          [ text "OBS Websockets" ]
-        , text " tested on 4.2.0"
-        ]
+      ]
     ]
-  ]
+
+aboutView : Model -> Html ViewMsg
+aboutView model =
+  div [ id "about" ]
+    [ h2 [] [ text "OBS Mic-Check" ]
+    , p []
+      [ text "Check that "
+      , a [ href "https://obsproject.com/" ] [ text "OBS Studio" ]
+      , text """ audio state and active video sources are synchronized, e.g., when "BRB" is showing, mic should be off, and vice-versa. Also includes alarms for dropped frames.""" ]
+    , h3 [] [ text "Requirements" ]
+    , p []
+      [ text "Requires "
+      , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
+        [ text "OBS Websockets" ]
+      , text " tested on 4.2.0"
+      ]
+    , h3 [] [ text "Contact" ]
+    , p []
+      [ a [ href "https://github.com/JustinLove/obs-mic-check" ]
+        [ text "Github" ]
+      , text " "
+      , a [ href "https://twitter.com/wondible" ]
+        [ text "@wondible" ]
+      ]
+    ]
 
 applicationView : Model -> Html ViewMsg
 applicationView model =
