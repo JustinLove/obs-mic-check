@@ -101,6 +101,8 @@ update msg model =
           |> Task.perform (\_ -> AttemptToConnect)
         ]
       )
+    View (Connect) ->
+      ({ model | connected = Connecting }, attemptToConnect model)
     View (SetPassword word) ->
       case model.connected of
         AuthRequired version challenge ->

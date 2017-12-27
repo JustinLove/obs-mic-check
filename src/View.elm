@@ -20,6 +20,7 @@ type ViewMsg
   = None
   | SetObsHost String
   | SetObsPort Int
+  | Connect
   | SetPassword String
   | LogOut
   | Cancel
@@ -88,6 +89,7 @@ connectionConfigView model =
         , on "change" <| targetValue int SetObsPort
         ] []
       ]
+    , button [ id "connect", onClick Connect ] [ text "Connect" ]
     ]
 
 aboutView : Model -> Html ViewMsg
