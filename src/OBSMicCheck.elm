@@ -44,6 +44,7 @@ init =
 type Msg
   = Loaded (Result String PersistenceModel)
   | AttemptToConnect
+  | ConnectionTimeout
   | OBS (Result String Message)
   | View ViewMsg
 
@@ -64,6 +65,11 @@ update msg model =
       (model, Cmd.none)
     AttemptToConnect ->
       ({ model | connected = Connecting }, attemptToConnect model)
+    ConnectionTimeout ->
+      if connectionInProcess model.connected then
+        ({ model | connected = Disconnected }, Cmd.none)
+      else
+        (model, Cmd.none)
     OBS (Ok (Response id response)) ->
       updateResponse response model
     OBS (Ok (Event event)) ->
@@ -104,10 +110,7 @@ update msg model =
           )
         _ -> (model, Cmd.none)
     View LogOut -> 
-      ( resetModel model
-      , Process.sleep 100
-        |> Task.perform (\_ -> AttemptToConnect)
-      )
+      ( resetModel model, Cmd.none )
     View Cancel ->
       ( { model | appMode = AudioRules }, Cmd.none )
     View (Navigate mode) ->
@@ -276,7 +279,21 @@ updateEvent event model =
 
 attemptToConnect : Model -> Cmd Msg
 attemptToConnect model =
-  obsSend model <| Request.getVersion
+  Cmd.batch 
+    [ obsSend model <| Request.getVersion
+    , Process.sleep 1000
+      |> Task.perform (\_ -> ConnectionTimeout)
+    ]
+
+connectionInProcess : ConnectionStatus -> Bool
+connectionInProcess connected =
+  case connected of
+    Disconnected -> False
+    Connecting -> True
+    Connected _ -> True
+    AuthRequired _ _ -> False
+    LoggingIn _ -> True
+    Authenticated _ -> False
 
 authenticated : Model -> (Model, Cmd Msg)
 authenticated model =
@@ -556,10 +573,6 @@ subscriptions model =
         Sub.none
       else
         WebSocket.listen (obsAddress model.obsHost model.obsPort) receiveMessage
-    , if model.connected == Connecting then
-        Time.every (10 * 1000) (\_ -> AttemptToConnect)
-      else
-        Sub.none
     , loaded (Loaded << Json.Decode.decodeString Model.Decode.persistenceModel)
     ]
 
