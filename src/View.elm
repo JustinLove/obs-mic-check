@@ -18,6 +18,8 @@ import Regex exposing (regex)
 
 type ViewMsg
   = None
+  | SetObsHost String
+  | SetObsPort Int
   | SetPassword String
   | LogOut
   | Cancel
@@ -37,6 +39,59 @@ type ViewMsg
 
 view : Model -> Html ViewMsg
 view model =
+  div []
+    [ case model.connected of
+      Disconnected ->
+        connectionView model
+      Connecting ->
+        connectionView model
+      Connected version ->
+        connectionView model
+      AuthRequired version _ ->
+        input
+          [ type_ "password"
+          , on "change" <| targetValue Json.Decode.string SetPassword
+          , placeholder "OBS Websockets password"
+          ] []
+      LoggingIn version ->
+        div [ class "logging-in" ] [ text "Logging In..." ]
+      Authenticated version->
+        applicationView model
+   ]
+
+connectionView : Model -> Html ViewMsg
+connectionView model =
+  div [ id "connection-config" ]
+    [ p [ class "config-obs-host" ]
+      [ input
+        [ value model.obsHost
+        , type_ "text"
+        , on "change" <| targetValue Json.Decode.string SetObsHost
+        ] []
+      , text " "
+      , label [] [ text "OBS Hostname" ]
+      ]
+    , p [ class "config-obs-port" ]
+      [ input
+        [ value <| toString model.obsPort
+        , type_ "number"
+        , Html.Attributes.min "0"
+        , Html.Attributes.max "65535"
+        , on "change" <| targetValue int SetObsPort
+        ] []
+      , text " "
+      , label [] [ text "OBS Port" ]
+    , div []
+        [ text "Requires "
+        , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
+          [ text "OBS Websockets" ]
+        , text " tested on 4.2.0"
+        ]
+    ]
+  ]
+
+applicationView : Model -> Html ViewMsg
+applicationView model =
   div
     [ classList
       [ ("alarms", isAlarming model.alarm)

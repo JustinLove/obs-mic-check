@@ -73,6 +73,28 @@ update msg model =
       (model, Cmd.none)
     View (None) ->
       (model, Cmd.none)
+    View (SetObsHost hostname) ->
+      let
+        newModel = resetModel { model | obsHost = hostname }
+      in
+      ( newModel
+      , Cmd.batch
+        [ saveModel newModel
+        , Process.sleep 100
+          |> Task.perform (\_ -> AttemptToConnect)
+        ]
+      )
+    View (SetObsPort port_) ->
+      let
+        newModel = resetModel { model | obsPort = port_ }
+      in
+      ( newModel
+      , Cmd.batch
+        [ saveModel newModel
+        , Process.sleep 100
+          |> Task.perform (\_ -> AttemptToConnect)
+        ]
+      )
     View (SetPassword word) ->
       case model.connected of
         AuthRequired version challenge ->
@@ -82,7 +104,7 @@ update msg model =
           )
         _ -> (model, Cmd.none)
     View LogOut -> 
-      ( { makeModel | ruleSet = model.ruleSet }
+      ( resetModel model
       , Process.sleep 100
         |> Task.perform (\_ -> AttemptToConnect)
       )
@@ -510,6 +532,16 @@ saveModel model =
     |> Model.Encode.persistenceModel
     |> Json.Encode.encode 0
     |> save
+
+resetModel : Model -> Model
+resetModel model =
+  { makeModel
+  | ruleSet = model.ruleSet
+  , frameSampleWindow = model.frameSampleWindow
+  , frameAlarmLevel = model.frameAlarmLevel
+  , obsHost = model.obsHost
+  , obsPort = model.obsPort
+  }
 
 obsAddress : String -> Int -> String
 obsAddress host port_ =
