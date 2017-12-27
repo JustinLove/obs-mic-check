@@ -8,8 +8,10 @@ import Json.Encode exposing (..)
 persistenceModel : PersistenceModel -> Value
 persistenceModel pm =
   object
-    [ ("version", int 2)
+    [ ("version", int 3)
     , ("ruleSet", ruleSet pm.ruleSet)
     , ("frameSampleWindow", int pm.frameSampleWindow)
     , ("frameAlarmLevel", float pm.frameAlarmLevel)
+    , ("obsHost", string pm.obsHost)
+    , ("obsPort", int pm.obsPort)
     ]

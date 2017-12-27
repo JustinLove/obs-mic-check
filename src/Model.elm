@@ -55,6 +55,8 @@ type alias PersistenceModel =
   { ruleSet : RuleSet
   , frameSampleWindow : Int
   , frameAlarmLevel : Float
+  , obsHost : String
+  , obsPort : Int
   }
 
 makeModel : Model

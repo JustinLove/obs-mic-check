@@ -55,6 +55,8 @@ update msg model =
         | ruleSet = pm.ruleSet
         , frameSampleWindow = pm.frameSampleWindow
         , frameAlarmLevel = pm.frameAlarmLevel
+        , obsHost = pm.obsHost
+        , obsPort = pm.obsPort
         }
       , Cmd.none)
     Loaded (Err message) ->
@@ -502,6 +504,8 @@ saveModel model =
   { ruleSet = model.ruleSet
   , frameSampleWindow = model.frameSampleWindow
   , frameAlarmLevel = model.frameAlarmLevel
+  , obsHost = model.obsHost
+  , obsPort = model.obsPort
   }
     |> Model.Encode.persistenceModel
     |> Json.Encode.encode 0
