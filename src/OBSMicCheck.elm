@@ -422,12 +422,14 @@ checkAlarms : Model -> Model
 checkAlarms model =
   let
     m2 = checkAudioAlarms <| checkFrameAlarms model
+    audioAlarming = (isAlarming m2.audioAlarm) && m2.audioAlarmAudible
+    frameAlarming = (isAlarming m2.frameAlarm) && m2.frameAlarmAudible
     alarm = mergeAlarms m2.frameAlarm m2.audioAlarm
   in
     { m2
     | alarm = alarm
     , alarmRepeat =
-      if isAlarming alarm then
+      if audioAlarming || frameAlarming then
         updateRepeat 2 58 m2.time m2.alarmRepeat
       else
         Rest 0
