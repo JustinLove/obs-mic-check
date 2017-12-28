@@ -25,6 +25,8 @@ type ViewMsg
   | LogOut
   | Cancel
   | Navigate AppMode
+  | AudioAudible Bool
+  | FrameAudible Bool
   | SelectVideoSource String
   | SelectRuleAudioRule RuleKey
   | SelectAudioSource String
@@ -182,28 +184,57 @@ displayNavigation model =
     [ ul []
       [ navigationItem model.appMode AudioRules "audio-alarms"
         audioTitle
+        AudioAudible model.audioAlarmAudible
         (iconForAlarm model.audioAlarm)
       , navigationItem model.appMode FrameRules "frame-alarm"
         ("Dropped Frames " ++ (toPercent model.droppedFrameRate))
+        FrameAudible model.frameAlarmAudible
         (iconForAlarm model.frameAlarm)
       ]
     ]
 
-navigationItem : AppMode -> AppMode -> String -> String -> Html ViewMsg -> Html ViewMsg
-navigationItem current target itemId title status =
+navigationItem
+   : AppMode
+  -> AppMode
+  -> String
+  -> String
+  -> (Bool -> ViewMsg)
+  -> Bool
+  -> Html ViewMsg
+  -> Html ViewMsg
+navigationItem current target itemId title audibleTag audible status =
   li [ classList [ ("selected", current == target) ] ]
-    [ input
-      [ type_ "radio"
-      , Html.Attributes.name "navigation"
-      , id (itemId ++ "-navigation")
-      , value title
-      , onCheck (\_ -> Navigate target)
-      , checked (current == target)
-      ] []
-    , label [ for (itemId ++ "-navigation") ]
-      [ text title
-      , text " "
-      , status
+    [ div [ class "navigation-controls" ]
+      [ input
+        [ type_ "radio"
+        , Html.Attributes.name "navigation"
+        , id (itemId ++ "-navigation")
+        , value title
+        , onCheck (\_ -> Navigate target)
+        , checked (current == target)
+        ] []
+      , label [ for (itemId ++ "-navigation") ]
+        [ text title
+        , text " "
+        , status
+        ]
+      ]
+    , div
+      [ classList
+        [ ("audible-controls", True)
+        , ("audible", audible)
+        ]
+      ]
+      [ input
+        [ type_ "checkbox"
+        , Html.Attributes.name (itemId ++ "-audible")
+        , id (itemId ++ "-audible")
+        , onCheck audibleTag
+        , checked audible
+        ] []
+      , label [ for (itemId ++ "-audible") ]
+        [ icon "bell"
+        ]
       ]
     ]
 

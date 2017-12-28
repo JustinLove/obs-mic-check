@@ -49,6 +49,8 @@ type alias Model =
   , frameAlarmLevel : Float
   , obsHost : String
   , obsPort : Int
+  , audioAlarmAudible : Bool
+  , frameAlarmAudible : Bool
   }
 
 type alias PersistenceModel =
@@ -63,7 +65,7 @@ makeModel : Model
 makeModel =
   { connected = Disconnected
   , appMode = AudioRules
-  , time =  0
+  , time = 0
   , currentScene = { name = "-", sources = []}
   , specialSources = (SpecialSources Nothing Nothing Nothing Nothing Nothing)
   , allSources = Dict.empty
@@ -79,5 +81,7 @@ makeModel =
   , frameAlarmLevel = 0.2
   , obsHost = "localhost"
   , obsPort = 4444
+  , audioAlarmAudible = True
+  , frameAlarmAudible = True
   }
 

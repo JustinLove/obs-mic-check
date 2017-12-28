@@ -117,6 +117,10 @@ update msg model =
       ( { model | appMode = AudioRules }, Cmd.none )
     View (Navigate mode) ->
       ( { model | appMode = mode }, Cmd.none )
+    View (AudioAudible audible) ->
+      ( { model | audioAlarmAudible = audible }, Cmd.none )
+    View (FrameAudible audible) ->
+      ( { model | frameAlarmAudible = audible }, Cmd.none )
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->
