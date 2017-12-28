@@ -21,6 +21,9 @@ body { height: 100%; margin: 0; }
 #connection-config label { display: block; }
 #connection-config input { display: block; }
 
+.disconnect { color: #888; }
+.connect { background-color: #bbf; }
+
 /* header */
 header {
   margin-bottom: 0.5em;

@@ -42,36 +42,53 @@ view : Model -> Html ViewMsg
 view model =
   div []
     [ case model.connected of
-      Disconnected ->
-        connectionView model
-      Connecting ->
-        connectionView model
-      Connected version ->
-        connectionView model
-      AuthRequired version _ ->
-        input
-          [ type_ "password"
-          , on "change" <| targetValue Json.Decode.string SetPassword
-          , placeholder "OBS Websockets password"
-          ] []
-      LoggingIn version ->
-        div [ class "logging-in" ] [ text "Logging In..." ]
-      Authenticated version->
-        applicationView model
-   ]
+        Authenticated _ ->
+          applicationView model
+        _ ->
+          connectionView model
+    ]
 
 connectionView : Model -> Html ViewMsg
 connectionView model =
   div [ id "connection-view" ]
-    [ connectionConfigView model
+    [ div [ id "connection-config" ]
+      [ h3 [] [ text "Connect" ]
+      , connectionProcessView model
+      ]
     , aboutView model
+    ]
+
+connectionProcessView : Model -> Html ViewMsg
+connectionProcessView model =
+  div []
+    [ case model.connected of
+        Disconnected ->
+          connectionConfigView model
+        Connecting ->
+          connectionConfigView model
+        Connected _ ->
+          connectionConfigView model
+        AuthRequired _ _ ->
+          div []
+            [ div [ class "setting" ]
+              [ label [] [ text "OBS Websockets password" ]
+              , input
+                  [ type_ "password"
+                  , on "change" <| targetValue Json.Decode.string SetPassword
+                  ] []
+              ]
+            , button [ class "disconnect", onClick LogOut ] [ text "Disconnect" ]
+            ]
+        LoggingIn _ ->
+          div [ class "logging-in" ] [ text "Logging In..." ]
+        Authenticated _ ->
+          text ""
     ]
 
 connectionConfigView : Model -> Html ViewMsg
 connectionConfigView model =
-  div [ id "connection-config" ]
-    [ h3 [] [ text "Connect" ]
-    , div [ class "setting config-obs-host" ]
+  div []
+    [ div [ class "setting config-obs-host" ]
       [ label [] [ text "OBS Hostname" ]
       , input
         [ value model.obsHost
@@ -89,7 +106,7 @@ connectionConfigView model =
         , on "change" <| targetValue int SetObsPort
         ] []
       ]
-    , button [ id "connect", onClick Connect ] [ text "Connect" ]
+    , button [ class "connect", onClick Connect ] [ text "Connect" ]
     ]
 
 aboutView : Model -> Html ViewMsg
@@ -391,7 +408,7 @@ displayConnectionStatus connected =
           ]
       Connected version ->
         div [ class "connected" ]
-          [ button [ id "logout", onClick LogOut ] [ text "log out" ]
+          [ button [ class "logout", onClick LogOut ] [ text "log out" ]
           , text ("Connected (not authenticated) v" ++ version)
           , text " "
           ]
@@ -405,7 +422,7 @@ displayConnectionStatus connected =
         div [ class "logging-in" ] [ text "Logging In..." ]
       Authenticated version->
         div [ class "authenticated" ]
-          [ button [ id "logout", onClick LogOut ] [ text "log out" ]
+          [ button [ class "logout", onClick LogOut ] [ text "log out" ]
           , text ("OBS-Websocket v" ++ version)
           , text " "
           ]
