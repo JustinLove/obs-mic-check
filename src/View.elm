@@ -68,10 +68,11 @@ connectionProcessView model =
           connectionConfigView model
         Connected _ ->
           connectionConfigView model
-        AuthRequired _ _ ->
+        AuthRequired version _ ->
           div []
-            [ div [ class "setting" ]
-              [ label [] [ text "OBS Websockets password" ]
+            [ p [] [ text ("OBS-Websocket v" ++ version) ]
+            , div [ class "setting" ]
+              [ label [] [ text "Password" ]
               , input
                   [ type_ "password"
                   , on "change" <| targetValue Json.Decode.string SetPassword
@@ -121,7 +122,7 @@ aboutView model =
     , p []
       [ text "Requires "
       , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
-        [ text "OBS Websockets" ]
+        [ text "OBS Websocket" ]
       , text " tested on 4.2.0"
       ]
     , h3 [] [ text "Contact" ]
@@ -403,7 +404,7 @@ displayConnectionStatus connected =
         div [ class "connecting" ]
           [ text "Requires "
           , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
-            [ text "OBS Websockets" ]
+            [ text "OBS Websocket" ]
           , text " tested on 4.2.0"
           ]
       Connected version ->
@@ -416,7 +417,7 @@ displayConnectionStatus connected =
         input
           [ type_ "password"
           , on "change" <| targetValue Json.Decode.string SetPassword
-          , placeholder "OBS Websockets password"
+          , placeholder "OBS Websocket password"
           ] []
       LoggingIn version ->
         div [ class "logging-in" ] [ text "Logging In..." ]
