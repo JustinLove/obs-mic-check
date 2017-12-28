@@ -59,6 +59,8 @@ type alias PersistenceModel =
   , frameAlarmLevel : Float
   , obsHost : String
   , obsPort : Int
+  , audioAlarmAudible : Bool
+  , frameAlarmAudible : Bool
   }
 
 makeModel : Model

@@ -58,6 +58,8 @@ update msg model =
         , frameAlarmLevel = pm.frameAlarmLevel
         , obsHost = pm.obsHost
         , obsPort = pm.obsPort
+        , audioAlarmAudible = pm.audioAlarmAudible
+        , frameAlarmAudible = pm.frameAlarmAudible
         }
       , Cmd.none)
     Loaded (Err message) ->
@@ -118,9 +120,11 @@ update msg model =
     View (Navigate mode) ->
       ( { model | appMode = mode }, Cmd.none )
     View (AudioAudible audible) ->
-      ( { model | audioAlarmAudible = audible }, Cmd.none )
+      { model | audioAlarmAudible = audible }
+        |> persist
     View (FrameAudible audible) ->
-      ( { model | frameAlarmAudible = audible }, Cmd.none )
+      { model | frameAlarmAudible = audible }
+        |> persist
     View (SelectVideoSource source) ->
       case model.appMode of
         SelectVideo audioRule ->
@@ -553,6 +557,8 @@ saveModel model =
   , frameAlarmLevel = model.frameAlarmLevel
   , obsHost = model.obsHost
   , obsPort = model.obsPort
+  , audioAlarmAudible = model.audioAlarmAudible
+  , frameAlarmAudible = model.frameAlarmAudible
   }
     |> Model.Encode.persistenceModel
     |> Json.Encode.encode 0
@@ -566,6 +572,8 @@ resetModel model =
   , frameAlarmLevel = model.frameAlarmLevel
   , obsHost = model.obsHost
   , obsPort = model.obsPort
+  , audioAlarmAudible = model.audioAlarmAudible
+  , frameAlarmAudible = model.frameAlarmAudible
   }
 
 obsAddress : String -> Int -> String
