@@ -11,33 +11,11 @@ persistenceModel =
   |> andThen (\version ->
     case version of
       1 -> fail "previous version"
-      2 -> v2
-      3 -> v3
+      2 -> fail "previous version"
+      3 -> fail "previous version"
       4 -> v4
       _ -> v4
     )
-
-v2 : Decoder PersistenceModel
-v2 =
-  map7 PersistenceModel
-    (field "ruleSet" ruleSet)
-    (field "frameSampleWindow" int)
-    (field "frameAlarmLevel" float)
-    (succeed "localhost")
-    (succeed 4444)
-    (succeed True)
-    (succeed True)
-
-v3 : Decoder PersistenceModel
-v3 =
-  map7 PersistenceModel
-    (field "ruleSet" ruleSet)
-    (field "frameSampleWindow" int)
-    (field "frameAlarmLevel" float)
-    (field "obsHost" string)
-    (field "obsPort" int)
-    (succeed True)
-    (succeed True)
 
 v4 : Decoder PersistenceModel
 v4 =
