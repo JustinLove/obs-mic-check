@@ -401,12 +401,7 @@ displayConnectionStatus connected =
       Disconnected ->
         div [ class "disconnected" ] [ text "Disconnected" ]
       Connecting ->
-        div [ class "connecting" ]
-          [ text "Requires "
-          , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
-            [ text "OBS Websocket" ]
-          , text " tested on 4.2.0"
-          ]
+        div [ class "connecting" ] [ text "Connecting" ]
       Connected version ->
         div [ class "connected" ]
           [ button [ class "logout", onClick LogOut ] [ text "log out" ]
@@ -422,10 +417,8 @@ displayConnectionStatus connected =
       LoggingIn version ->
         div [ class "logging-in" ] [ text "Logging In..." ]
       Authenticated version->
-        div [ class "authenticated" ]
+        div [ class "authenticated", title ("OBS-Websocket v" ++ version) ]
           [ button [ class "logout", onClick LogOut ] [ text "log out" ]
-          , text ("OBS-Websocket v" ++ version)
-          , text " "
           ]
    ]
 

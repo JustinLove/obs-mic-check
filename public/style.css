@@ -31,7 +31,7 @@ header {
   display: flex;
 }
 #logout { margin-right: 1em; }
-.connection-status { margin: 0.5em; width: 17em; }
+.connection-status { margin: 0.5em; }
 .alarm-status { margin: 0.5em; }
 .alarm-status label { color: #888; font-size: 80%; }
 
