@@ -105,9 +105,12 @@ svg.icon {
   display: inline-block;
   width: 1em;
   height: 1em;
-  vertical-align: -0.1em;
+  vertical-align: -0.2em;
   stroke-width: 0;
   stroke: currentColor;
   fill: currentColor;
 }
 .audio.muted { color: red; }
+.icon-github { color: black; }
+.icon-twitter { color: #55acee; }
+.icon-twitch { color: #6441A4; }

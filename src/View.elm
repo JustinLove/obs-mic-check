@@ -110,10 +110,13 @@ aboutView model =
     , h3 [] [ text "Contact" ]
     , p []
       [ a [ href "https://github.com/JustinLove/obs-mic-check" ]
-        [ text "Github" ]
+        [ icon "github", text "obs-mic-check" ]
       , text " "
       , a [ href "https://twitter.com/wondible" ]
-        [ text "@wondible" ]
+        [ icon "twitter", text "@wondible" ]
+      , text " "
+      , a [ href "https://twitch.tv/wondible" ]
+        [ icon "twitch", text "wondible" ]
       ]
     ]
 
