@@ -52,15 +52,7 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Loaded (Ok pm) ->
-      ( { model
-        | ruleSet = pm.ruleSet
-        , frameSampleWindow = pm.frameSampleWindow
-        , frameAlarmLevel = pm.frameAlarmLevel
-        , obsHost = pm.obsHost
-        , obsPort = pm.obsPort
-        , audioAlarmAudible = pm.audioAlarmAudible
-        , frameAlarmAudible = pm.frameAlarmAudible
-        }
+      ( copyPersistance pm model
       , Cmd.none)
     Loaded (Err message) ->
       let _ = Debug.log "load error" message in
@@ -552,29 +544,14 @@ obsSend model message =
 
 saveModel : Model -> Cmd Msg
 saveModel model =
-  { ruleSet = model.ruleSet
-  , frameSampleWindow = model.frameSampleWindow
-  , frameAlarmLevel = model.frameAlarmLevel
-  , obsHost = model.obsHost
-  , obsPort = model.obsPort
-  , audioAlarmAudible = model.audioAlarmAudible
-  , frameAlarmAudible = model.frameAlarmAudible
-  }
+  copyPersistance model blankPersistenceModel
     |> Model.Encode.persistenceModel
     |> Json.Encode.encode 0
     |> save
 
 resetModel : Model -> Model
 resetModel model =
-  { makeModel
-  | ruleSet = model.ruleSet
-  , frameSampleWindow = model.frameSampleWindow
-  , frameAlarmLevel = model.frameAlarmLevel
-  , obsHost = model.obsHost
-  , obsPort = model.obsPort
-  , audioAlarmAudible = model.audioAlarmAudible
-  , frameAlarmAudible = model.frameAlarmAudible
-  }
+  copyPersistance model makeModel
 
 obsAddress : String -> Int -> String
 obsAddress host port_ =

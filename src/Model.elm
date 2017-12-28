@@ -1,4 +1,4 @@
-module Model exposing (Model, PersistenceModel, AppMode(..), RuleKey(..), ConnectionStatus(..), makeModel)
+module Model exposing (Model, PersistenceModel, AppMode(..), RuleKey(..), ConnectionStatus(..), makeModel, blankPersistenceModel, copyPersistance)
 
 import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..))
 import Alarm exposing (Alarm(..), AlarmRepeat(..))
@@ -85,5 +85,27 @@ makeModel =
   , obsPort = 4444
   , audioAlarmAudible = True
   , frameAlarmAudible = True
+  }
+
+blankPersistenceModel : PersistenceModel
+blankPersistenceModel =
+  { ruleSet = ( RuleSet.empty RuleSet.defaultAudio )
+  , frameSampleWindow = 60
+  , frameAlarmLevel = 0.2
+  , obsHost = "localhost"
+  , obsPort = 4444
+  , audioAlarmAudible = True
+  , frameAlarmAudible = True
+  }
+
+copyPersistance from to = 
+  { to
+  | ruleSet = from.ruleSet
+  , frameSampleWindow = from.frameSampleWindow
+  , frameAlarmLevel = from.frameAlarmLevel
+  , obsHost = from.obsHost
+  , obsPort = from.obsPort
+  , audioAlarmAudible = from.audioAlarmAudible
+  , frameAlarmAudible = from.frameAlarmAudible
   }
 
