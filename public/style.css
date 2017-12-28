@@ -12,11 +12,30 @@ body { height: 100%; margin: 0; }
   overflow: auto;
 }
 
+/* Dead Simple Grid (c) 2015 Vladimir Agafonkin */
+
+.row .row { margin:  0 -1.5em; }
+.col      { padding: 0  1.5em; }
+
+.row:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+@media only screen { .col {
+    float: left;
+    width: 100%;
+    box-sizing: border-box;
+}}
+/* End DSG */
+
+#about { max-width: 35em; }
+#connection-config { max-width: 15em; }
+
 .alarms { background-color: #FBB; }
 
 /* connection config view */
-#connection-view { margin: 1em; }
-
 #connection-config .setting { margin-bottom: 1em; }
 #connection-config label { display: block; }
 #connection-config input { display: block; }

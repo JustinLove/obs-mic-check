@@ -50,12 +50,12 @@ view model =
 
 connectionView : Model -> Html ViewMsg
 connectionView model =
-  div [ id "connection-view" ]
-    [ div [ id "connection-config" ]
+  div [ id "connection-view", class "row" ]
+    [ div [ id "connection-config", class "col" ]
       [ h3 [] [ text "Connect" ]
       , connectionProcessView model
       ]
-    , aboutView model
+    , div [ id "about", class "col" ] [ aboutView model ]
     ]
 
 connectionProcessView : Model -> Html ViewMsg
@@ -112,7 +112,7 @@ connectionConfigView model =
 
 aboutView : Model -> Html ViewMsg
 aboutView model =
-  div [ id "about" ]
+  div []
     [ h2 [] [ text "OBS Mic-Check" ]
     , p []
       [ text "Check that "
