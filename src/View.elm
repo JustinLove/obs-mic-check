@@ -589,24 +589,27 @@ displayAudioSourceChoice audioStates source =
       , ("source", True)
       ]
     ]
-    [ td [ ariaLabelledby "select-audio-selected" ]
+    [ td []
       [ input
         [ type_ "checkbox"
         , Html.Attributes.name (source.name ++ "-selected")
         , id (source.name ++ "-selected")
+        , ariaLabelledby (source.name ++ "-source-name")
         , value "selected"
         , onCheck (\_ -> (SelectAudioSource source.name))
         , checked (status /= Nothing)
         ] []
       ]
-    , td [ ariaLabelledby "select-audio-visible", class "icon-column" ] [ renderStatus source.render ]
-    , td [ ariaLabelledby "selecte-audio-live", class "icon-column" ]
+    , td [ ariaLabelledby "select-audio-visible", class "icon-column" ]
+      [ renderStatus source.render ]
+    , td [ class "icon-column" ]
       ( case status of
           Just audio ->
             [ input
               [ type_ "checkbox"
               , Html.Attributes.name (source.name ++ "-live")
               , id (source.name ++ "-live")
+              , ariaLabelledby "select-audio-live"
               , value "live"
               , onCheck (\_ -> (SelectAudioStatus source.name))
               , checked (status == Just Live)
@@ -616,7 +619,10 @@ displayAudioSourceChoice audioStates source =
           Nothing -> [ text "" ]
       )
     , td [ ariaLabelledby "select-audio-source-name" ]
-      [ label [ for (source.name ++ "-selected") ]
+      [ label
+        [ for (source.name ++ "-selected")
+        , id (source.name ++ "-source-name")
+        ]
         [ text source.name ]
       ]
     , td [ ariaLabelledby "select-audio-source-type" ] [ em [] [ text source.type_ ] ]
@@ -656,8 +662,8 @@ displayRule : Bool -> Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewM
 displayRule copyable classes (video, audio) =
   tr [ classes ]
     <| List.append
-      [ td [ class "delete", ariaLabelledby "audio-rules-delete" ]
-        [ button [ onClick (RemoveRule video) ] [ icon "bin" ] ]
+      [ td [ class "delete" ]
+        [ button [ onClick (RemoveRule video), ariaLabelledby "audio-rules-delete" ] [ icon "bin" ] ]
       , (displayVideoRule video)
       ]
       (displayAudioRule copyable (VideoKey video) audio)
@@ -692,9 +698,11 @@ displayVideoRule videoState =
 displayAudioRule : Bool -> RuleKey -> AudioRule -> List (Html ViewMsg)
 displayAudioRule copyable key (AudioRule operator states timeout) =
   [ td
-    [ ariaLabelledby "audio-ruless-audio-status" ]
+    []
     [ button
-      [ onClick <| SelectRuleAudioRule key ]
+      [ onClick <| SelectRuleAudioRule key
+      , ariaLabelledby "audio-ruless-audio-status"
+      ]
       [ div [ class "audio-status" ]
         [ div [ class "edit" ] [ icon "pencil" ]
         , div [ class "operator" ] [ text <| toString operator ]
@@ -704,18 +712,21 @@ displayAudioRule copyable key (AudioRule operator states timeout) =
         ]
       ]
     ]
-  , td [ ariaLabelledby "audio-rules-seconds" ]
+  , td []
     [ input
       [ value <| toString timeout
       , type_ "number"
+      , ariaLabelledby "audio-rules-seconds"
       , Html.Attributes.min "0"
       , on "change" <| targetValue int (SetTimeout key)
       , class "timeout"
       ] []
     ]
-  , td [ ariaLabelledby "audio-rules-copy" ]
+  , td []
     [ button
-      [ onClick (CopyRule key), disabled (not copyable) ]
+      [ onClick (CopyRule key), disabled (not copyable)
+      , ariaLabelledby "audio-rules-copy"
+      ]
       [ icon "copy" ]
     ]
   ]
