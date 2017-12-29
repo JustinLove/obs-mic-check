@@ -78,9 +78,11 @@ connectionProcessView model =
           div []
             [ p [] [ text ("OBS-Websocket v" ++ version) ]
             , div [ class "setting" ]
-              [ label [] [ text "Password" ]
+              [ label [ for "password" ] [ text "Password" ]
               , input
                   [ type_ "password"
+                  , id "password"
+                  , name "password"
                   , on "change" <| targetValue Json.Decode.string SetPassword
                   ] []
               ]
@@ -96,18 +98,22 @@ connectionConfigView : Model -> Html ViewMsg
 connectionConfigView model =
   div []
     [ div [ class "setting config-obs-host" ]
-      [ label [] [ text "OBS Hostname" ]
+      [ label [ for "host" ] [ text "OBS Hostname" ]
       , input
         [ value model.obsHost
         , type_ "text"
+        , id "host"
+        , name "host"
         , on "change" <| targetValue Json.Decode.string SetObsHost
         ] []
       ]
     , div [ class "setting config-obs-port" ]
-      [ label [] [ text "OBS Port" ]
+      [ label [ for "port" ] [ text "OBS Port" ]
       , input
         [ value <| toString model.obsPort
         , type_ "number"
+        , id "post"
+        , name "port"
         , Html.Attributes.min "0"
         , Html.Attributes.max "65535"
         , on "change" <| targetValue int SetObsPort
@@ -207,7 +213,10 @@ navigationItem
   -> Html ViewMsg
   -> Html ViewMsg
 navigationItem current target itemId title audibleTag audible status =
-  li [ classList [ ("selected", current == target) ] ]
+  li
+    [ classList [ ("selected", current == target) ]
+    , ariaSelected (if current == target then "true" else "false")
+    ]
     [ div [ class "navigation-controls" ]
       [ input
         [ type_ "radio"
@@ -270,23 +279,27 @@ displayFrameParameters frameSampleWindow frameAlarmLevel =
       [ input
         [ value <| toString frameSampleWindow
         , type_ "number"
+        , id "frame-sample-window"
+        , name "frame-sample-window"
         , Html.Attributes.min "1"
         , on "change" <| targetValue int SetFrameSampleWindow
         ] []
       , text " "
-      , label [] [ text "Sample Seconds" ]
+      , label [ for "frame-sample-window" ] [ text "Sample Seconds" ]
       ]
     , p [ class "config-frame-alarm-level" ]
       [ input
         [ value <| toString (frameAlarmLevel * 100.0)
         , type_ "number"
+        , id "frame-alarm-level"
+        , name "frame-alarm-level"
         , Html.Attributes.min "0"
         , Html.Attributes.max "100"
         , step "0.1"
         , on "change" <| targetValue (Json.Decode.map ((*) 0.01) <| float) SetFrameAlarmLevel
         ] []
       , text " "
-      , label [] [ text "Alarm Level %" ]
+      , label [ for "frame-alarm-level" ] [ text "Alarm Level %" ]
     ]
   ]
 
@@ -745,6 +758,7 @@ audioGroup name isSelected msg =
     [ type_ "button"
     , Html.Attributes.name ("audio-group-" ++ name)
     , id ("audio-group-" ++ name)
+    , ariaSelected (if isSelected then "true" else "false")
     , value name
     , onClick msg
     , classList
