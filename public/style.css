@@ -3,6 +3,14 @@
 /* https://stackoverflow.com/a/10639419 */
 html { min-height: 100%; position: relative; }
 body { height: 100%; margin: 0; }
+#elm {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: auto;
+}
 #application {
   position: absolute;
   top: 0;
@@ -33,26 +41,23 @@ body { height: 100%; margin: 0; }
 #about { max-width: 35em; }
 #connection-config { max-width: 15em; }
 
-.alarms { background-color: #FBB; }
+button { border: 1px solid; }
 
 /* connection config view */
 #connection-config .setting { margin-bottom: 1em; }
 #connection-config label { display: block; }
 #connection-config input { display: block; }
 
-.disconnect { color: #888; }
-.connect { background-color: #bbf; }
-
 /* header */
 header {
   margin-bottom: 0.5em;
-  border-bottom: solid #eee 1px;
+  border-bottom: solid 1px;
   display: flex;
 }
 #logout { margin-right: 1em; }
 .connection-status { margin: 0.5em; }
 .alarm-status { margin: 0.5em; }
-.alarm-status label { color: #888; font-size: 80%; }
+.alarm-status label { font-size: 80%; }
 
 /* navigation */
 nav ul { list-style-type: none; display: flex; }
@@ -60,21 +65,18 @@ nav li {
   padding-left: 1em;
   padding-right: 1em;
 }
-nav li.selected { background-color: #bbf; }
 nav li div { display: inline-block; }
 nav li .navigation-controls { margin-right: 0.5em; }
 nav .navigation-controls .icon { display: inline-block; margin-left: 0.5em;}
 nav .icon-warning { color: yellow; }
 nav .icon-fire { color: red; }
-nav .icon-bell { color: #bbb; }
-nav .audible .icon-bell { color: black; }
 
 /* audio rules */
-.rules { xborder: solid #aaa 1px; border-collapse: collapse;}
-.rules tr { border: solid #aaa 1px; }
+.rules { border-collapse: collapse;}
+.rules tr { border: solid 1px; }
 .rules td, .rules th {
-  border-left: dashed #eee 1px;
-  border-right: dashed #eee 1px;
+  border-left: dashed 1px;
+  border-right: dashed 1px;
   padding-left: 1em;
   padding-right: 1em;
 }
@@ -86,20 +88,17 @@ nav .audible .icon-bell { color: black; }
 .rules .hint, .rules .hint th  { border: none; }
 
 .timeout { width: 4em; }
-.active { background-color: #BFB; }
-.violation { background-color: #FFB; }
-.missing { color: #888; background-color: #F2F2F2; }
 .audio-status { display: flex; align-items: center; }
 .audio-status .operator { width: 2em; margin-left: 0.5em; margin-right: 1em; }
 
 /* video (and audio?) source select */
 h2 + .heading-note { margin-top: -1em; font-style: italic;}
-.source-list { border: solid #aaa 1px; border-collapse: collapse;}
+.source-list { border: solid 1px; border-collapse: collapse;}
 .source-list td, .source-list th {
-  border-top: solid #aaa 1px;
-  border-bottom: solid #aaa 1px;
-  border-left: dashed #eee 1px;
-  border-right: dashed #eee 1px;
+  border-top: solid 1px;
+  border-bottom: solid 1px;
+  border-left: dashed 1px;
+  border-right: dashed 1px;
   padding-left: 1em;
   padding-right: 1em;
 }
@@ -113,13 +112,9 @@ h2 + .heading-note { margin-top: -1em; font-style: italic;}
   padding-left: 0.2em;
 }
 .hidden { opacity: 0.5; }
-#select-video tr.source:hover {
-  background-color: #eef;
-}
 
 /* audio status select */
 .audio-mode { width: 10em; height: 2em; }
-.current-mode { background-color: #bbf; }
 
 /* frame rules */
 .config-frame-sample-window input { width: 5em; }
@@ -140,3 +135,104 @@ svg.icon {
 .icon-github { color: black; }
 .icon-twitter { color: #55acee; }
 .icon-twitch { color: #6441A4; }
+
+/************** color: light theme ************/
+
+.light { background-color: white; color: black; }
+.light #elm { background-color: #white; }
+.light button { background-color: #eee; color: black; border-color: #ddd;}
+
+.light #application.alarms { background-color: #FBB; }
+
+/* connection view */
+.light .disconnect { color: #888; }
+.light .connect { background-color: #bbf; }
+
+/* header */
+.light header { border-bottom-color: #eee; }
+.light .alarm-status label { color: #888; }
+
+/* audio rules */
+.light .rules tr { border-color: #aaa; }
+.light .rules td, .rules th {
+  border-left-color: #eee;
+  border-right-color: #eee;
+}
+
+.light nav li.selected { background-color: #bbf; }
+
+.light nav .icon-bell { color: #bbb; }
+.light nav .audible .icon-bell { color: black; }
+
+.light .active { background-color: #BFB; }
+.light .violation { background-color: #FFB; }
+.light .missing { color: #888; background-color: #F2F2F2; }
+
+/* source select */
+.light .source-list { border-color: #aaa;}
+.light .source-list td, .source-list th {
+  border-top-color: #aaa;
+  border-bottom-color: #aaa;
+  border-left-color: #eee;
+  border-right-color: #eee;
+}
+
+.light #select-video tr.source:hover {
+  background-color: #eef;
+}
+
+/* select audio */
+.light .current-mode { background-color: #bbf; }
+
+/************** color: dark theme ************/
+
+.dark { background-color: #444; color: white; }
+.dark #elm { background-color: #444; }
+.dark button { background-color: #666; color: white; border-color: #777;}
+.dark input { background-color: #222; color: white; border: solid #777 1px;}
+.dark a:link { color: #bbf; }
+.dark a:visited { color: #88b; }
+.dark a:hover { color: #fff; }
+.dark a:active { color: #fff; }
+
+.dark #application.alarms { background-color: #a44; }
+
+/* connection view */
+.dark .disconnect { color: #888; }
+.dark .connect { background-color: #44f; }
+
+/* header */
+.dark header { border-bottom-color: #888; }
+.dark .alarm-status label { color: #888; }
+
+/* audio rules */
+.dark .rules tr { border-color: #888; }
+.dark .rules td, .rules th {
+  border-left-color: #666;
+  border-right-color: #666;
+}
+
+.dark nav li.selected { background-color: #44f; }
+
+.dark nav .icon-bell { color: #888; }
+.dark nav .audible .icon-bell { color: white; }
+
+.dark .active { background-color: #4a4; }
+.dark .violation { background-color: #aa4; }
+.dark .missing { color: #888; background-color: #555; }
+
+/* source select */
+.dark .source-list { border-color: #888;}
+.dark .source-list td, .source-list th {
+  border-top-color: #888;
+  border-bottom-color: #888;
+  border-left-color: #666;
+  border-right-color: #666;
+}
+.dark #select-video tr.source:hover {
+  background-color: #eef;
+}
+
+/* select audio */
+.dark .current-mode { background-color: #44f; }
+

@@ -42,7 +42,10 @@ type ViewMsg
 
 view : Model -> Html ViewMsg
 view model =
-  div []
+  div
+    [ class "dark"
+    , id "elm"
+    ]
     [ case model.connected of
         Authenticated _ ->
           applicationView model
