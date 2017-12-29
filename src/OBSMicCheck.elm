@@ -283,7 +283,7 @@ attemptToConnect : Model -> Cmd Msg
 attemptToConnect model =
   Cmd.batch 
     [ obsSend model <| Request.getVersion
-    , Process.sleep 1000
+    , Process.sleep 2000
       |> Task.perform (\_ -> ConnectionTimeout)
     ]
 
