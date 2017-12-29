@@ -170,7 +170,7 @@ applicationView model =
 
 displayHeader : Model -> Html ViewMsg
 displayHeader model =
-  header []
+  header [ role "banner" ]
     [ displayConnectionStatus model.connected
     , alarmStatus model
     , if audioPlaying model.alarmRepeat then
@@ -237,6 +237,8 @@ navigationItem current target itemId title audibleTag audible status =
         [ ("audible-controls", True)
         , ("audible", audible)
         ]
+      , Html.Attributes.title "audible alarms"
+      , ariaLabel "Audible Alarm"
       ]
       [ input
         [ type_ "checkbox"
@@ -335,11 +337,15 @@ displaySelectVideo model =
     [ h2 [] [ text scene.name ]
     , p [ class "heading-note" ]
       [ text "Only sources from the active scene are shown." ]
-    , p [ class "instructions" ] [ text
+    , p [ class "instructions", id "select-video-instructions" ] [ text
     """Select video source to copy audio rules to.
     The first visible source will have it's audio rules checked. """ ]
     , button [ onClick Cancel ] [ text "Cancel" ]
-    , table [ class "source-list" ]
+    , table
+      [ class "source-list"
+      , role "listbox"
+      , ariaDescribedby "select-video-instructions"
+      ]
       <| List.map (displaySourceForSelect SelectVideoSource)
       <| List.filter (noCurrentRule model.ruleSet)
       <| List.filter mightBeVideoSource
@@ -582,6 +588,8 @@ displaySourceForSelect tagger source =
       , ("source", True)
       ]
     , onClick (tagger source.name)
+    , role "option"
+    , ariaLabel source.name
     ]
     [ td [ class "icon-column" ] [ renderStatus source.render ]
     , td [ class "icon-column" ] [ audioStatus source.audio ]
