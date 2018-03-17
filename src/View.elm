@@ -739,7 +739,7 @@ displayAudioRule copyable key (AudioRule operator states timeout) =
     ]
   , td []
     [ input
-      [ value <| toString timeout
+      [ defaultValue <| toString timeout
       , type_ "number"
       , ariaLabelledby "audio-rules-seconds"
       , Html.Attributes.min "0"
