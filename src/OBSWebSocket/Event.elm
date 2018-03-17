@@ -10,6 +10,7 @@ type EventData
   | SceneItemAdded String String
   | SceneItemRemoved String String
   | SceneItemVisibilityChanged String String Render
+  | StreamStarted
   | StreamStatus StatusReport
 
 event : Decoder EventData
@@ -22,7 +23,7 @@ event =
     "SceneItemRemoved" -> sceneItemRemoved
     "SceneItemVisibilityChanged" -> sceneItemVisibilityChanged
     "StreamStarting" -> succeed (IgnoredEvent updateType)
-    "StreamStarted" -> succeed (IgnoredEvent updateType)
+    "StreamStarted" -> succeed StreamStarted
     "StreamStopping" -> succeed (IgnoredEvent updateType)
     "StreamStopped" -> succeed (IgnoredEvent updateType)
     "StreamStatus" -> streamStatus

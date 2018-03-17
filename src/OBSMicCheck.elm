@@ -258,6 +258,8 @@ updateEvent event model =
       ( updateActive {model | currentScene = setRender model.currentScene sourceName render}
       , Cmd.none
       )
+    Event.StreamStarted ->
+      ({ model | recentStatus = []}, Cmd.none)
     Event.StreamStatus status ->
       if model.connected == Disconnected then
         (model, attemptToConnect model)
