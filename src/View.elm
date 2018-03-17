@@ -137,6 +137,10 @@ aboutView model =
         [ text "OBS Websocket" ]
       , text " tested on 4.2.0"
       ]
+    , h3 [] [ text "Data Storage" ]
+    , p []
+      [ text """Data is stored in browser local storage, and will not be synchronized between browsers."""
+      ]
     , h3 [] [ text "Contact" ]
     , p []
       [ a [ href "https://github.com/JustinLove/obs-mic-check" ]

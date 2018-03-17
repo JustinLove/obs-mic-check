@@ -10,6 +10,8 @@ Check that [OBS Studio](https://obsproject.com/) audio state and active video so
 
 ## Usage
 
+Data is stored in browser local storage and will not be synchronized between different browsers.
+
 Application two sections: Audio Alarms (e.g. mic-check) and Dropped Frames alarms.
 
 ### Audio Alarms
