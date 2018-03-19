@@ -2,7 +2,7 @@ module View exposing (view, ViewMsg(..))
 
 import Model exposing (Model, AppMode(..), RuleKey(..), ConnectionStatus(..))
 import OBSWebSocket.Data exposing (Scene, Source, Render(..), Audio(..), Challenge, StatusReport, mightBeVideoSource, mightBeAudioSource)
-import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), checkVideoState, checkAudioRule)
+import RuleSet exposing (RuleSet(..), VideoState(..), AudioRule(..), Operator(..), AudioState(..), checkVideoState, checkAudioRule, checkAudioState)
 import Alarm exposing (Alarm(..), AlarmRepeat(..), isAlarming)
 
 import Html exposing (..)
@@ -260,7 +260,7 @@ navigationItem current target itemId title audibleTag audible status =
 displayAudioRules : Model -> Html ViewMsg
 displayAudioRules model =
   div [ id "audio-rules" ]
-    [ displayRuleSet model model.currentScene.sources model.ruleSet
+    [ lazy2 displayRuleSet model.currentScene.sources model.ruleSet
     ]
 
 displayFrameRules : Model -> Html ViewMsg
@@ -489,8 +489,8 @@ displayConnectionStatus connected =
           ]
    ]
 
-displayRuleSet : Model -> List Source -> RuleSet -> Html ViewMsg
-displayRuleSet model sources ruleSet =
+displayRuleSet : List Source -> RuleSet -> Html ViewMsg
+displayRuleSet sources ruleSet =
   let
     activeVideoState = RuleSet.activeVideoState sources ruleSet
     sourceOrder = sources
@@ -519,7 +519,8 @@ displayRuleSet model sources ruleSet =
             videoState = Tuple.first rule
             (VideoState name _) = videoState
           in
-          lazy3 displayRule
+          displayRule
+          sources
           copyable
           (ruleClasses 
             ((Just videoState) == activeVideoState)
@@ -529,7 +530,8 @@ displayRuleSet model sources ruleSet =
           rule
         )
       |> (flip List.append)
-        [ lazy3 displayDefaultRule
+        [ displayDefaultRule
+          sources
           copyable
           (ruleClasses
             (Nothing == activeVideoState)
@@ -683,24 +685,24 @@ audioStatus audio =
     Muted -> span [ class "audio muted" ] [ icon "volume-mute2" ]
     Live -> span [ class "audio live" ] [ icon "volume-medium" ]
 
-displayRule : Bool -> Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
-displayRule copyable classes (video, audio) =
+displayRule : List Source -> Bool -> Attribute ViewMsg -> (VideoState, AudioRule) -> Html ViewMsg
+displayRule sources copyable classes (video, audio) =
   tr [ classes ]
     <| List.append
       [ td [ class "delete" ]
         [ button [ onClick (RemoveRule video), ariaLabelledby "audio-rules-delete" ] [ icon "bin" ] ]
       , (displayVideoRule video)
       ]
-      (displayAudioRule copyable (VideoKey video) audio)
+      (displayAudioRule sources copyable (VideoKey video) audio)
 
-displayDefaultRule : Bool -> Attribute ViewMsg -> AudioRule -> Html ViewMsg
-displayDefaultRule copyable classes audioRule =
+displayDefaultRule : List Source -> Bool -> Attribute ViewMsg -> AudioRule -> Html ViewMsg
+displayDefaultRule sources copyable classes audioRule =
   tr [ classes ]
     <| List.append
       [ td [ class "delete" ] []
       , td [] [ text "default " ]
       ]
-      (displayAudioRule copyable DefaultKey audioRule)
+      (displayAudioRule sources copyable DefaultKey audioRule)
 
 ruleClasses : Bool -> Bool -> Bool -> Attribute ViewMsg
 ruleClasses active violation missing =
@@ -720,8 +722,8 @@ displayVideoRule videoState =
         , text sourceName
         ]
 
-displayAudioRule : Bool -> RuleKey -> AudioRule -> List (Html ViewMsg)
-displayAudioRule copyable key (AudioRule operator states timeout) =
+displayAudioRule : List Source -> Bool -> RuleKey -> AudioRule -> List (Html ViewMsg)
+displayAudioRule sources copyable key (AudioRule operator states timeout) =
   [ td
     []
     [ button
@@ -733,7 +735,7 @@ displayAudioRule copyable key (AudioRule operator states timeout) =
         , div [ class "operator" ] [ text <| toString operator ]
         , ul [ class "audio-states" ]
           <| List.map (\e -> li [] [e])
-          <| List.map displayAudioState states
+          <| List.map (displayAudioState sources) states
         ]
       ]
     ]
@@ -756,9 +758,13 @@ displayAudioRule copyable key (AudioRule operator states timeout) =
     ]
   ]
 
-displayAudioState : AudioState -> Html ViewMsg
-displayAudioState (AudioState sourceName audio) =
-  div []
+displayAudioState : List Source -> AudioState -> Html ViewMsg
+displayAudioState sources (AudioState sourceName audio) =
+  div
+    [ classList
+      [ ("audio-source-violation", checkAudioState sources (AudioState sourceName audio))
+      ]
+    ]
     [ text sourceName
     , text " "
     , audioStatus audio

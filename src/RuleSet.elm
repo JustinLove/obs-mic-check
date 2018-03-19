@@ -10,6 +10,7 @@ module RuleSet exposing
   , audioSourceNames
   , checkVideoState
   , checkAudioRule
+  , checkAudioState
   , empty
   , insert
   , update
