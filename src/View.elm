@@ -135,7 +135,7 @@ aboutView model =
       [ text "Requires "
       , a [ href "https://obsproject.com/forum/resources/obs-websocket-remote-control-of-obs-studio-made-easy.466/" ]
         [ text "OBS Websocket" ]
-      , text " tested on 4.2.0"
+      , text " tested on 4.3.3, should still be 4.2.0 compatible"
       ]
     , h3 [] [ text "Data Storage" ]
     , p []
