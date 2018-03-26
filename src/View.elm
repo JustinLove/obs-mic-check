@@ -723,16 +723,22 @@ displayVideoRule videoState =
         ]
 
 displayAudioRule : List Source -> Bool -> RuleKey -> AudioRule -> List (Html ViewMsg)
-displayAudioRule sources copyable key (AudioRule operator states timeout) =
+displayAudioRule sources copyable key ((AudioRule operator states timeout) as rule) =
   [ td
     []
     [ button
       [ onClick <| SelectRuleAudioRule key
-      , ariaLabelledby "audio-ruless-audio-status"
+      , ariaLabelledby "audio-rules-audio-status"
       ]
       [ div [ class "audio-status" ]
         [ div [ class "edit" ] [ icon "pencil" ]
-        , div [ class "operator" ] [ text <| toString operator ]
+        , div
+          [ classList
+            [ ("operator", True)
+            , ("audio-source-violation", checkAudioRule sources rule)
+            ]
+          ]
+          [ text <| toString operator ]
         , ul [ class "audio-states" ]
           <| List.map (\e -> li [] [e])
           <| List.map (displayAudioState sources) states

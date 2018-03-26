@@ -90,7 +90,6 @@ nav .icon-fire { color: red; }
 .timeout { width: 4em; }
 .audio-status { display: flex; align-items: center; }
 .audio-status .operator { width: 2em; margin-left: 0.5em; margin-right: 1em; }
-.violation .audio-status .operator {color: yellow;}
 .audio-status .audio-source-violation {color: yellow;}
 
 /* video (and audio?) source select */
